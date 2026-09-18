@@ -30,4 +30,7 @@ interface ContentDao {
 
     @Query("SELECT COUNT(*) FROM generated_content WHERE topicId = :topicId AND contentType = :contentType")
     fun getContentCountByType(topicId: Long, contentType: ContentType): Flow<Int>
+
+    @Query("SELECT * FROM generated_content WHERE topicId = :topicId ORDER BY createdAt DESC")
+    fun getContentByTopicForMix(topicId: Long): Flow<List<ContentEntity>>
 }

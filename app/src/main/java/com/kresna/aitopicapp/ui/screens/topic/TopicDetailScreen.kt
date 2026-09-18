@@ -53,7 +53,6 @@ fun TopicDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedContentType by viewModel.selectedContentType.collectAsState()
-    val selectedCount by viewModel.selectedCount.collectAsState()
     val isGenerating by viewModel.isGenerating.collectAsState()
     val generationResult by viewModel.generationResult.collectAsState()
     var showErrorDialog by remember { mutableStateOf<String?>(null) }
@@ -145,29 +144,6 @@ fun TopicDetailScreen(
                                 selected = selectedContentType == type,
                                 onClick = { viewModel.selectContentType(type) },
                                 label = { Text(type.displayName) }
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Quantity",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf(3, 5, 10).forEach { count ->
-                            FilterChip(
-                                selected = selectedCount == count,
-                                onClick = { viewModel.selectCount(count) },
-                                label = { Text("$count") }
                             )
                         }
                     }

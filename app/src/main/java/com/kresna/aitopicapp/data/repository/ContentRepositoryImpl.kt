@@ -41,6 +41,12 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getContentByTopicForMix(topicId: Long): Flow<List<GeneratedContent>> {
+        return contentDao.getContentByTopicForMix(topicId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override fun getContentCountByType(topicId: Long, contentType: ContentType): Flow<Int> {
         return contentDao.getContentCountByType(topicId, contentType)
     }
@@ -70,6 +76,7 @@ class ContentRepositoryImpl @Inject constructor(
                 ContentType.MCQ -> PromptBuilder.buildMcqPrompt(topicName, topicDescription, count)
                 ContentType.QA -> PromptBuilder.buildQaPrompt(topicName, topicDescription, count)
                 ContentType.FUN_FACT -> PromptBuilder.buildFunFactPrompt(topicName, topicDescription, count)
+                ContentType.MIX -> PromptBuilder.buildMixPrompt(topicName, topicDescription)
             }
 
             val request = BytePlusRequest(
@@ -85,7 +92,12 @@ class ContentRepositoryImpl @Inject constructor(
             val text = response.choices?.firstOrNull()?.message?.content
 
             if (text != null) {
-                ContentParser.parseResponse(text, contentType, topicId)
+                val parseResult = if (contentType == ContentType.MIX) {
+                    ContentParser.parseMixResponse(text, topicId)
+                } else {
+                    ContentParser.parseResponse(text, contentType, topicId)
+                }
+                parseResult
                     .onSuccess { contentList ->
                         val entities = contentList.map { ContentEntity.fromDomain(it) }
                         contentDao.insertAll(entities)

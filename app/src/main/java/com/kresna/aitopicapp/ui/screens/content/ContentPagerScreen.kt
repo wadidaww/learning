@@ -50,7 +50,9 @@ fun ContentPagerScreen(
     viewModel: ContentPagerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val contentList by viewModel.contentList.collectAsState()
     val currentPage by viewModel.currentPage.collectAsState()
+    val isLoadingMore by viewModel.isLoadingMore.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
@@ -66,14 +68,9 @@ fun ContentPagerScreen(
                     }
                 },
                 actions = {
-                    when (val state = uiState) {
-                        is UiState.Success -> {
-                            if (state.data.isNotEmpty() && currentPage < state.data.size) {
-                                val content = state.data[currentPage]
-                                ShareButton(content = content, context = context)
-                            }
-                        }
-                        else -> {}
+                    if (contentList.isNotEmpty() && currentPage < contentList.size) {
+                        val content = contentList[currentPage]
+                        ShareButton(content = content, context = context)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -136,7 +133,6 @@ fun ContentPagerScreen(
             }
 
             is UiState.Success -> {
-                val contentList = state.data
                 if (contentList.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -199,6 +195,7 @@ fun ContentPagerScreen(
                                 ContentType.MCQ -> MCQCard(content = contentList[page])
                                 ContentType.QA -> QACard(content = contentList[page])
                                 ContentType.FUN_FACT -> FunFactCard(content = contentList[page])
+                                ContentType.MIX -> FunFactCard(content = contentList[page])
                             }
                         }
 
@@ -213,6 +210,19 @@ fun ContentPagerScreen(
                                 pageCount = contentList.size,
                                 currentPage = currentPage
                             )
+                        }
+
+                        if (isLoadingMore) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }
                     }
                 }

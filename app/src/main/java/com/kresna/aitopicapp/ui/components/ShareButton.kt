@@ -72,5 +72,15 @@ private fun buildShareText(content: GeneratedContent): String {
                 appendLine("📖 Source: ${content.explanation}")
             }
         }
+
+        ContentType.MIX -> buildString {
+            appendLine("📚 AI Topic Learning")
+            appendLine()
+            appendLine("${content.question}")
+            if (content.answer != null) {
+                appendLine()
+                appendLine("${content.answer}")
+            }
+        }
     }
 }

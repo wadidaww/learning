@@ -11,6 +11,7 @@ interface ContentRepository {
     fun getContentCountByType(topicId: Long, contentType: ContentType): Flow<Int>
     suspend fun markAsViewed(contentId: Long)
     suspend fun resetViewedStatus(topicId: Long)
+    fun getContentByTopicForMix(topicId: Long): Flow<List<GeneratedContent>>
     suspend fun generateContent(
         topicId: Long,
         topicName: String,

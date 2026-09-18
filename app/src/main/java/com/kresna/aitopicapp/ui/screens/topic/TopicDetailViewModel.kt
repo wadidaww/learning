@@ -25,6 +25,10 @@ class TopicDetailViewModel @Inject constructor(
     private val generateContentUseCase: GenerateContentUseCase
 ) : ViewModel() {
 
+    companion object {
+        private const val DEFAULT_BATCH_SIZE = 10
+    }
+
     private val topicId: Long = savedStateHandle.get<Long>("topicId") ?: 0L
 
     private val _uiState = MutableStateFlow<UiState<Topic>>(UiState.Loading)
@@ -32,9 +36,6 @@ class TopicDetailViewModel @Inject constructor(
 
     private val _selectedContentType = MutableStateFlow(ContentType.MCQ)
     val selectedContentType: StateFlow<ContentType> = _selectedContentType.asStateFlow()
-
-    private val _selectedCount = MutableStateFlow(5)
-    val selectedCount: StateFlow<Int> = _selectedCount.asStateFlow()
 
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
@@ -69,10 +70,6 @@ class TopicDetailViewModel @Inject constructor(
         _selectedContentType.value = type
     }
 
-    fun selectCount(count: Int) {
-        _selectedCount.value = count
-    }
-
     fun generateContent() {
         val topic = (_uiState.value as? UiState.Success)?.data ?: return
 
@@ -85,7 +82,7 @@ class TopicDetailViewModel @Inject constructor(
                 topicName = topic.name,
                 topicDescription = topic.description,
                 contentType = _selectedContentType.value,
-                count = _selectedCount.value
+                count = DEFAULT_BATCH_SIZE
             )
 
             _generationResult.value = result.fold(
