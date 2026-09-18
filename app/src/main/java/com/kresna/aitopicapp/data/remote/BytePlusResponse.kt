@@ -1,5 +1,7 @@
 package com.kresna.aitopicapp.data.remote
 
+import com.google.gson.annotations.SerializedName
+
 data class BytePlusResponse(
     val id: String?,
     val choices: List<Choice>?,
@@ -9,7 +11,8 @@ data class BytePlusResponse(
 data class Choice(
     val index: Int?,
     val message: ResponseMessage?,
-    val finish_reason: String?
+    @SerializedName("finish_reason")
+    val finishReason: String?
 )
 
 data class ResponseMessage(
@@ -18,9 +21,12 @@ data class ResponseMessage(
 )
 
 data class Usage(
-    val prompt_tokens: Int?,
-    val completion_tokens: Int?,
-    val total_tokens: Int?
+    @SerializedName("prompt_tokens")
+    val promptTokens: Int?,
+    @SerializedName("completion_tokens")
+    val completionTokens: Int?,
+    @SerializedName("total_tokens")
+    val totalTokens: Int?
 )
 
 data class BytePlusErrorResponse(

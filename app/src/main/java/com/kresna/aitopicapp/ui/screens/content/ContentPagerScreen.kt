@@ -31,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,7 +51,6 @@ fun ContentPagerScreen(
     val uiState by viewModel.uiState.collectAsState()
     val contentList by viewModel.contentList.collectAsState()
     val isLoadingMore by viewModel.isLoadingMore.collectAsState()
-    val context = LocalContext.current
 
     val pagerState = rememberPagerState(pageCount = { contentList.size })
 
@@ -80,7 +78,7 @@ fun ContentPagerScreen(
                 actions = {
                     if (contentList.isNotEmpty() && pagerState.currentPage < contentList.size) {
                         val content = contentList[pagerState.currentPage]
-                        ShareButton(content = content, context = context)
+                        ShareButton(content = content)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

@@ -9,11 +9,10 @@ import com.kresna.aitopicapp.domain.model.Topic
 import com.kresna.aitopicapp.domain.usecase.GenerateContentUseCase
 import com.kresna.aitopicapp.domain.usecase.GetTopicsUseCase
 import com.kresna.aitopicapp.ui.common.UiState
+import com.kresna.aitopicapp.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,7 +25,7 @@ class TopicDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     companion object {
-        private const val DEFAULT_BATCH_SIZE = 10
+        private const val DEFAULT_BATCH_SIZE = Constants.DEFAULT_BATCH_SIZE
     }
 
     private val topicId: Long = savedStateHandle.get<Long>("topicId") ?: 0L
@@ -42,9 +41,6 @@ class TopicDetailViewModel @Inject constructor(
 
     private val _generationResult = MutableStateFlow<GenerationResult?>(null)
     val generationResult: StateFlow<GenerationResult?> = _generationResult.asStateFlow()
-
-    private val _events = MutableSharedFlow<String>()
-    val events = _events.asSharedFlow()
 
     init {
         loadTopic()

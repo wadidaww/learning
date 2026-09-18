@@ -13,27 +13,50 @@ object ContentParser {
     private val gson = Gson()
 
     fun parseResponse(responseText: String, contentType: ContentType, topicId: Long): Result<List<GeneratedContent>> {
+        val items = parseJsonArray(responseText) ?: return Result.success(emptyList())
+        return parseItems(items, topicId) { _, element -> parseItemByType(element, contentType, topicId) }
+    }
+
+    fun parseMixResponse(responseText: String, topicId: Long): Result<List<GeneratedContent>> {
+        val items = parseJsonArray(responseText) ?: return Result.success(emptyList())
+        return parseItems(items, topicId) { index, element ->
+            val typeStr = element.get("type")?.asString
+            val type = ContentType.fromString(typeStr)
+            if (typeStr != null && type == ContentType.MCQ && typeStr != "MCQ") {
+                Log.w(TAG, "Unknown type '$typeStr' at index $index, skipping")
+                null
+            } else {
+                parseItemByType(element, type, topicId)
+            }
+        }
+    }
+
+    private fun parseJsonArray(responseText: String): JsonArray? {
         return try {
             val cleanedJson = cleanJsonResponse(responseText)
             val jsonArray = gson.fromJson(cleanedJson, JsonArray::class.java)
-
             if (jsonArray == null) {
                 Log.w(TAG, "Parsed JSON array is null")
-                return Result.success(emptyList())
             }
+            jsonArray
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse JSON array", e)
+            null
+        }
+    }
 
+    private fun parseItems(
+        items: JsonArray,
+        topicId: Long,
+        itemParser: (Int, JsonObject) -> GeneratedContent?
+    ): Result<List<GeneratedContent>> {
+        return try {
             val results = mutableListOf<GeneratedContent>()
 
-            for (i in 0 until jsonArray.size()) {
-                val element = jsonArray.get(i)
+            for (i in 0 until items.size()) {
+                val element = items.get(i)
                 if (element is JsonObject) {
-                    val content = when (contentType) {
-                        ContentType.MCQ -> parseMcq(element, topicId)
-                        ContentType.QA -> parseQa(element, topicId)
-                        ContentType.FUN_FACT -> parseFunFact(element, topicId)
-                        ContentType.MIX -> parseMixItem(element, topicId)
-                    }
-                    results.add(content)
+                    itemParser(i, element)?.let { results.add(it) }
                 } else {
                     Log.w(TAG, "Array element $i is not a JsonObject: ${element?.javaClass?.simpleName}")
                 }
@@ -41,8 +64,17 @@ object ContentParser {
 
             Result.success(results)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse AI response", e)
-            Result.failure(Exception("Failed to parse AI response: ${e.message}"))
+            Log.e(TAG, "Failed to parse items", e)
+            Result.failure(Exception("Failed to parse AI response: ${e.message}", e))
+        }
+    }
+
+    private fun parseItemByType(jsonObject: JsonObject, contentType: ContentType, topicId: Long): GeneratedContent? {
+        return when (contentType) {
+            ContentType.MCQ -> parseMcq(jsonObject, topicId)
+            ContentType.QA -> parseQa(jsonObject, topicId)
+            ContentType.FUN_FACT -> parseFunFact(jsonObject, topicId)
+            ContentType.MIX -> null
         }
     }
 
@@ -63,7 +95,7 @@ object ContentParser {
     private fun parseMcq(jsonObject: JsonObject, topicId: Long): GeneratedContent {
         val question = jsonObject.get("question")?.asString ?: ""
         val optionsArray = jsonObject.getAsJsonArray("options")
-        val options = (0 until optionsArray.size()).map { optionsArray.get(it).asString }
+        val options = (0 until (optionsArray?.size() ?: 0)).map { optionsArray!!.get(it).asString }
         val correctIndex = jsonObject.get("correctIndex")?.asInt ?: 0
         val explanation = jsonObject.get("explanation")?.asString
 
@@ -100,68 +132,5 @@ object ContentParser {
             answer = fact,
             explanation = source
         )
-    }
-
-    private fun parseMixItem(jsonObject: JsonObject, topicId: Long): GeneratedContent {
-        val typeStr = jsonObject.get("type")?.asString
-        val type = try {
-            ContentType.valueOf(typeStr ?: "")
-        } catch (e: IllegalArgumentException) {
-            ContentType.MCQ
-        }
-
-        return when (type) {
-            ContentType.MCQ -> parseMcq(jsonObject, topicId)
-            ContentType.QA -> parseQa(jsonObject, topicId)
-            ContentType.FUN_FACT -> parseFunFact(jsonObject, topicId)
-            ContentType.MIX -> parseMcq(jsonObject, topicId)
-        }
-    }
-
-    fun parseMixResponse(responseText: String, topicId: Long): Result<List<GeneratedContent>> {
-        return try {
-            val cleanedJson = cleanJsonResponse(responseText)
-            val jsonArray = gson.fromJson(cleanedJson, JsonArray::class.java)
-
-            if (jsonArray == null) {
-                Log.w(TAG, "Parsed JSON array is null for MIX response")
-                return Result.success(emptyList())
-            }
-
-            val results = mutableListOf<GeneratedContent>()
-
-            for (i in 0 until jsonArray.size()) {
-                val element = jsonArray.get(i)
-                if (element is JsonObject) {
-                    val typeStr = element.get("type")?.asString
-                    val type = try {
-                        ContentType.valueOf(typeStr ?: "")
-                    } catch (e: IllegalArgumentException) {
-                        Log.w(TAG, "Unknown type '$typeStr' at index $i, skipping")
-                        null
-                    }
-
-                    if (type != null) {
-                        val content = when (type) {
-                            ContentType.MCQ -> parseMcq(element, topicId)
-                            ContentType.QA -> parseQa(element, topicId)
-                            ContentType.FUN_FACT -> parseFunFact(element, topicId)
-                            ContentType.MIX -> {
-                                Log.w(TAG, "Nested MIX type at index $i, skipping")
-                                null
-                            }
-                        }
-                        content?.let { results.add(it) }
-                    }
-                } else {
-                    Log.w(TAG, "Array element $i is not a JsonObject: ${element?.javaClass?.simpleName}")
-                }
-            }
-
-            Result.success(results)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse MIX AI response", e)
-            Result.failure(Exception("Failed to parse MIX AI response: ${e.message}"))
-        }
     }
 }

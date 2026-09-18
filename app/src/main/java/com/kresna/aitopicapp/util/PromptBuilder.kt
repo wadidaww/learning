@@ -2,11 +2,6 @@ package com.kresna.aitopicapp.util
 
 object PromptBuilder {
 
-    private const val MIX_MCQ_COUNT = 4
-    private const val MIX_QA_COUNT = 3
-    private const val MIX_FUN_FACT_COUNT = 3
-    private const val EXISTING_QUESTIONS_LIMIT = 20
-
     fun buildMcqPrompt(
         topic: String,
         context: String,
@@ -110,7 +105,7 @@ object PromptBuilder {
     fun buildMixPrompt(
         topic: String,
         context: String,
-        count: Int = MIX_MCQ_COUNT + MIX_QA_COUNT + MIX_FUN_FACT_COUNT,
+        count: Int = Constants.MixContent.TOTAL,
         existingQuestions: List<String> = emptyList()
     ): String {
         return """
@@ -121,7 +116,7 @@ object PromptBuilder {
             ${buildExistingQuestionsSection(existingQuestions)}
 
             Requirements:
-            - Generate exactly $MIX_MCQ_COUNT multiple choice questions, $MIX_QA_COUNT question and answer pairs, and $MIX_FUN_FACT_COUNT fun facts
+            - Generate exactly ${Constants.MixContent.MCQ_COUNT} multiple choice questions, ${Constants.MixContent.QA_COUNT} question and answer pairs, and ${Constants.MixContent.FUN_FACT_COUNT} fun facts
             - Each item must have a "type" field: "MCQ", "QA", or "FUN_FACT"
             - MCQ items: "question", "options" (4 options as strings), "correctIndex" (0-3), "explanation"
             - QA items: "question", "answer"
@@ -157,7 +152,7 @@ object PromptBuilder {
 
     private fun buildExistingQuestionsSection(existingQuestions: List<String>): String {
         if (existingQuestions.isEmpty()) return ""
-        val limited = existingQuestions.takeLast(EXISTING_QUESTIONS_LIMIT)
+        val limited = existingQuestions.takeLast(Constants.EXISTING_QUESTIONS_LIMIT)
         val questionList = limited.joinToString("\n") { "- $it" }
         return """
             IMPORTANT: The following questions/topics have already been covered. Generate completely different and unique content. Do NOT repeat or rephrase any of these:

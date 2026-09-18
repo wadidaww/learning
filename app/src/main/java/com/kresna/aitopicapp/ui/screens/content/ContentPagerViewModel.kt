@@ -9,6 +9,7 @@ import com.kresna.aitopicapp.domain.repository.ContentRepository
 import com.kresna.aitopicapp.domain.usecase.GenerateContentUseCase
 import com.kresna.aitopicapp.domain.usecase.GetTopicsUseCase
 import com.kresna.aitopicapp.ui.common.UiState
+import com.kresna.aitopicapp.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,8 +26,8 @@ class ContentPagerViewModel @Inject constructor(
 ) : ViewModel() {
 
     companion object {
-        private const val DEFAULT_BATCH_SIZE = 10
-        private const val PREFETCH_THRESHOLD = 2
+        private const val DEFAULT_BATCH_SIZE = Constants.DEFAULT_BATCH_SIZE
+        private const val PREFETCH_THRESHOLD = Constants.PREFETCH_THRESHOLD
     }
 
     private val topicId: Long = savedStateHandle.get<Long>("topicId") ?: 0L
@@ -41,11 +42,7 @@ class ContentPagerViewModel @Inject constructor(
     private val _isLoadingMore = MutableStateFlow(false)
     val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
 
-    private val contentType: ContentType = try {
-        ContentType.valueOf(contentTypeStr)
-    } catch (e: IllegalArgumentException) {
-        ContentType.MCQ
-    }
+    private val contentType: ContentType = ContentType.fromString(contentTypeStr)
 
     private var hasMoreContent = true
 

@@ -30,12 +30,6 @@ class ContentRepositoryImpl @Inject constructor(
 
     private val gson = Gson()
 
-    override fun getUnviewedContent(topicId: Long): Flow<List<GeneratedContent>> {
-        return contentDao.getUnviewedContent(topicId).map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
-
     override fun getAllContentForTopic(topicId: Long): Flow<List<GeneratedContent>> {
         return contentDao.getAllContentForTopic(topicId).map { entities ->
             entities.map { it.toDomain() }
@@ -54,16 +48,8 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getContentCountByType(topicId: Long, contentType: ContentType): Flow<Int> {
-        return contentDao.getContentCountByType(topicId, contentType)
-    }
-
     override suspend fun markAsViewed(contentId: Long) {
         contentDao.markAsViewed(contentId)
-    }
-
-    override suspend fun resetViewedStatus(topicId: Long) {
-        contentDao.resetViewedStatus(topicId)
     }
 
     override suspend fun generateContent(
