@@ -5,12 +5,20 @@ object PromptBuilder {
     private const val MIX_MCQ_COUNT = 4
     private const val MIX_QA_COUNT = 3
     private const val MIX_FUN_FACT_COUNT = 3
+    private const val EXISTING_QUESTIONS_LIMIT = 20
 
-    fun buildMcqPrompt(topic: String, context: String, count: Int): String {
+    fun buildMcqPrompt(
+        topic: String,
+        context: String,
+        count: Int,
+        existingQuestions: List<String> = emptyList()
+    ): String {
         return """
             Generate $count unique multiple choice questions about: $topic
 
             Additional context from user: $context
+
+            ${buildExistingQuestionsSection(existingQuestions)}
 
             Requirements:
             - Each question must be educational and factually accurate
@@ -19,6 +27,7 @@ object PromptBuilder {
             - Each question has exactly 4 options (A, B, C, D)
             - Exactly one option is correct
             - Provide a brief explanation for the correct answer
+            - Do NOT duplicate any of the already covered questions listed above
 
             Return ONLY a JSON array in this exact format:
             [
@@ -34,17 +43,25 @@ object PromptBuilder {
         """.trimIndent()
     }
 
-    fun buildQaPrompt(topic: String, context: String, count: Int): String {
+    fun buildQaPrompt(
+        topic: String,
+        context: String,
+        count: Int,
+        existingQuestions: List<String> = emptyList()
+    ): String {
         return """
             Generate $count unique question and answer pairs about: $topic
 
             Additional context from user: $context
+
+            ${buildExistingQuestionsSection(existingQuestions)}
 
             Requirements:
             - Questions should be educational and insightful
             - Answers should be clear, detailed, and easy to understand
             - Vary between conceptual and factual questions
             - Include real-world examples when relevant
+            - Do NOT duplicate any of the already covered questions listed above
 
             Return ONLY a JSON array in this exact format:
             [
@@ -58,17 +75,25 @@ object PromptBuilder {
         """.trimIndent()
     }
 
-    fun buildFunFactPrompt(topic: String, context: String, count: Int): String {
+    fun buildFunFactPrompt(
+        topic: String,
+        context: String,
+        count: Int,
+        existingQuestions: List<String> = emptyList()
+    ): String {
         return """
             Generate $count unique fun facts about: $topic
 
             Additional context from user: $context
+
+            ${buildExistingQuestionsSection(existingQuestions)}
 
             Requirements:
             - Facts should be surprising, interesting, or little-known
             - Each fact should be educational
             - Make them engaging and memorable
             - Include the source or context when relevant
+            - Do NOT duplicate any of the already covered facts listed above
 
             Return ONLY a JSON array in this exact format:
             [
@@ -82,11 +107,18 @@ object PromptBuilder {
         """.trimIndent()
     }
 
-    fun buildMixPrompt(topic: String, context: String, count: Int = MIX_MCQ_COUNT + MIX_QA_COUNT + MIX_FUN_FACT_COUNT): String {
+    fun buildMixPrompt(
+        topic: String,
+        context: String,
+        count: Int = MIX_MCQ_COUNT + MIX_QA_COUNT + MIX_FUN_FACT_COUNT,
+        existingQuestions: List<String> = emptyList()
+    ): String {
         return """
             Generate a mix of content about: $topic
 
             Additional context from user: $context
+
+            ${buildExistingQuestionsSection(existingQuestions)}
 
             Requirements:
             - Generate exactly $MIX_MCQ_COUNT multiple choice questions, $MIX_QA_COUNT question and answer pairs, and $MIX_FUN_FACT_COUNT fun facts
@@ -96,6 +128,7 @@ object PromptBuilder {
             - FUN_FACT items: "fact", "source"
             - All content must be educational and factually accurate
             - Shuffle the items randomly so the types are mixed
+            - Do NOT duplicate any of the already covered content listed above
 
             Return ONLY a JSON array in this exact format:
             [
@@ -119,6 +152,16 @@ object PromptBuilder {
             ]
 
             Do not include any other text, just the JSON array.
+        """.trimIndent()
+    }
+
+    private fun buildExistingQuestionsSection(existingQuestions: List<String>): String {
+        if (existingQuestions.isEmpty()) return ""
+        val limited = existingQuestions.takeLast(EXISTING_QUESTIONS_LIMIT)
+        val questionList = limited.joinToString("\n") { "- $it" }
+        return """
+            IMPORTANT: The following questions/topics have already been covered. Generate completely different and unique content. Do NOT repeat or rephrase any of these:
+            $questionList
         """.trimIndent()
     }
 }

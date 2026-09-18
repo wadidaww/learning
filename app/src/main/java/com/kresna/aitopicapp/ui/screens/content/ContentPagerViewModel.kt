@@ -38,9 +38,6 @@ class ContentPagerViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiState<Unit>>(UiState.Loading)
     val uiState: StateFlow<UiState<Unit>> = _uiState.asStateFlow()
 
-    private val _currentPage = MutableStateFlow(0)
-    val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
-
     private val _isLoadingMore = MutableStateFlow(false)
     val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
 
@@ -78,9 +75,7 @@ class ContentPagerViewModel @Inject constructor(
         }
     }
 
-    fun onPageChanged(page: Int) {
-        _currentPage.value = page
-        val listSize = _contentList.value.size
+    fun onPagerPageChanged(page: Int, listSize: Int) {
         if (listSize > 0 && page >= listSize - PREFETCH_THRESHOLD) {
             loadMoreContent()
         }

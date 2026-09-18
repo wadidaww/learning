@@ -33,4 +33,10 @@ interface ContentDao {
 
     @Query("SELECT * FROM generated_content WHERE topicId = :topicId ORDER BY createdAt DESC")
     fun getContentByTopicForMix(topicId: Long): Flow<List<ContentEntity>>
+
+    @Query("SELECT question FROM generated_content WHERE topicId = :topicId AND contentType = :contentType")
+    suspend fun getExistingQuestions(topicId: Long, contentType: ContentType): List<String>
+
+    @Query("SELECT question FROM generated_content WHERE topicId = :topicId")
+    suspend fun getExistingQuestionsForMix(topicId: Long): List<String>
 }

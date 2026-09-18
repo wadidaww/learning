@@ -51,9 +51,19 @@ fun ContentPagerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val contentList by viewModel.contentList.collectAsState()
-    val currentPage by viewModel.currentPage.collectAsState()
     val isLoadingMore by viewModel.isLoadingMore.collectAsState()
     val context = LocalContext.current
+
+    val pagerState = rememberPagerState(pageCount = { contentList.size })
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            if (contentList.isNotEmpty() && page < contentList.size) {
+                viewModel.markAsViewed(contentList[page].id)
+                viewModel.onPagerPageChanged(page, contentList.size)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -68,8 +78,8 @@ fun ContentPagerScreen(
                     }
                 },
                 actions = {
-                    if (contentList.isNotEmpty() && currentPage < contentList.size) {
-                        val content = contentList[currentPage]
+                    if (contentList.isNotEmpty() && pagerState.currentPage < contentList.size) {
+                        val content = contentList[pagerState.currentPage]
                         ShareButton(content = content, context = context)
                     }
                 },
@@ -171,15 +181,6 @@ fun ContentPagerScreen(
                         }
                     }
                 } else {
-                    val pagerState = rememberPagerState(pageCount = { contentList.size })
-
-                    LaunchedEffect(pagerState) {
-                        snapshotFlow { pagerState.currentPage }.collect { page ->
-                            viewModel.onPageChanged(page)
-                            viewModel.markAsViewed(contentList[page].id)
-                        }
-                    }
-
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -208,7 +209,7 @@ fun ContentPagerScreen(
                         ) {
                             PageIndicator(
                                 pageCount = contentList.size,
-                                currentPage = currentPage
+                                currentPage = pagerState.currentPage
                             )
                         }
 

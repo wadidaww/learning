@@ -79,11 +79,16 @@ class ContentRepositoryImpl @Inject constructor(
                 return Result.failure(Exception("API key not configured. Please set it in Settings."))
             }
 
+            val existingQuestions = when (contentType) {
+                ContentType.MIX -> contentDao.getExistingQuestionsForMix(topicId)
+                else -> contentDao.getExistingQuestions(topicId, contentType)
+            }
+
             val prompt = when (contentType) {
-                ContentType.MCQ -> PromptBuilder.buildMcqPrompt(topicName, topicDescription, count)
-                ContentType.QA -> PromptBuilder.buildQaPrompt(topicName, topicDescription, count)
-                ContentType.FUN_FACT -> PromptBuilder.buildFunFactPrompt(topicName, topicDescription, count)
-                ContentType.MIX -> PromptBuilder.buildMixPrompt(topicName, topicDescription)
+                ContentType.MCQ -> PromptBuilder.buildMcqPrompt(topicName, topicDescription, count, existingQuestions)
+                ContentType.QA -> PromptBuilder.buildQaPrompt(topicName, topicDescription, count, existingQuestions)
+                ContentType.FUN_FACT -> PromptBuilder.buildFunFactPrompt(topicName, topicDescription, count, existingQuestions)
+                ContentType.MIX -> PromptBuilder.buildMixPrompt(topicName, topicDescription, existingQuestions = existingQuestions)
             }
 
             val request = BytePlusRequest(
@@ -113,9 +118,13 @@ class ContentRepositoryImpl @Inject constructor(
                 }
                 parseResult
                     .onSuccess { contentList ->
-                        val entities = contentList.map { ContentEntity.fromDomain(it) }
+                        val uniqueContent = contentList.filter { it.question !in existingQuestions }
+                        if (uniqueContent.isEmpty()) {
+                            return Result.success(emptyList())
+                        }
+                        val entities = uniqueContent.map { ContentEntity.fromDomain(it) }
                         contentDao.insertAll(entities)
-                        return Result.success(contentList)
+                        return Result.success(uniqueContent)
                     }
                     .onFailure { e ->
                         return Result.failure(e)
