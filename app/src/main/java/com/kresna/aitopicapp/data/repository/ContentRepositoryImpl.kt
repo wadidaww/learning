@@ -1,9 +1,11 @@
 package com.kresna.aitopicapp.data.repository
 
+import com.google.gson.Gson
 import com.kresna.aitopicapp.data.local.SettingsDataStore
 import com.kresna.aitopicapp.data.local.dao.ContentDao
 import com.kresna.aitopicapp.data.local.entity.ContentEntity
 import com.kresna.aitopicapp.data.remote.BytePlusApi
+import com.kresna.aitopicapp.data.remote.BytePlusErrorResponse
 import com.kresna.aitopicapp.data.remote.BytePlusRequest
 import com.kresna.aitopicapp.data.remote.ChatMessage
 import com.kresna.aitopicapp.domain.model.ContentType
@@ -12,16 +14,21 @@ import com.kresna.aitopicapp.domain.repository.ContentRepository
 import com.kresna.aitopicapp.util.ContentParser
 import com.kresna.aitopicapp.util.PromptBuilder
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ContentRepositoryImpl @Inject constructor(
     private val contentDao: ContentDao,
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    private val okHttpClient: OkHttpClient
 ) : ContentRepository {
+
+    private val gson = Gson()
 
     override fun getUnviewedContent(topicId: Long): Flow<List<GeneratedContent>> {
         return contentDao.getUnviewedContent(topicId).map { entities ->
@@ -86,10 +93,17 @@ class ContentRepositoryImpl @Inject constructor(
                 )
             )
 
-            val api = createApiWithSettings(settings.apiKey, settings.baseUrl)
+            val api = createApi(settings.baseUrl)
             val response = api.chatCompletions(request)
 
-            val text = response.choices?.firstOrNull()?.message?.content
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = parseErrorBody(errorBody, response.code())
+                return Result.failure(Exception(errorMessage))
+            }
+
+            val body = response.body()
+            val text = body?.choices?.firstOrNull()?.message?.content
 
             if (text != null) {
                 val parseResult = if (contentType == ContentType.MIX) {
@@ -113,22 +127,24 @@ class ContentRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun createApiWithSettings(apiKey: String, baseUrl: String): BytePlusApi {
-        val client = okhttp3.OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .header("Authorization", "Bearer $apiKey")
-                    .header("Content-Type", "application/json")
-                    .build()
-                chain.proceed(request)
-            }
-            .build()
-
-        return retrofit2.Retrofit.Builder()
+    private fun createApi(baseUrl: String): BytePlusApi {
+        return Retrofit.Builder()
             .baseUrl(baseUrl)
-            .client(client)
-            .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(BytePlusApi::class.java)
+    }
+
+    private fun parseErrorBody(errorBody: String?, code: Int): String {
+        if (errorBody.isNullOrBlank()) {
+            return "API error: HTTP $code"
+        }
+        return try {
+            val errorResponse = gson.fromJson(errorBody, BytePlusErrorResponse::class.java)
+            errorResponse?.error?.message ?: "API error: HTTP $code"
+        } catch (e: Exception) {
+            "API error: HTTP $code"
+        }
     }
 }

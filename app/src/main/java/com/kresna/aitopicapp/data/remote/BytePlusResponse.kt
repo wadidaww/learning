@@ -22,3 +22,13 @@ data class Usage(
     val completion_tokens: Int?,
     val total_tokens: Int?
 )
+
+data class BytePlusErrorResponse(
+    val error: BytePlusError?
+)
+
+data class BytePlusError(
+    val code: String?,
+    val message: String?,
+    val status: String?
+)
