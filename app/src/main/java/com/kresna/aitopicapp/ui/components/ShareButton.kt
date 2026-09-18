@@ -3,7 +3,7 @@ package com.kresna.aitopicapp.ui.components
 import android.content.Context
 import android.content.Intent
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Share
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,7 +20,7 @@ fun ShareButton(
         onClick = { shareContent(content, context) }
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.Share,
+            imageVector = Icons.Default.Share,
             contentDescription = "Share",
             tint = MaterialTheme.colorScheme.onPrimary
         )

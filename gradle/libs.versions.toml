@@ -1,8 +1,8 @@
 [versions]
-agp = "8.3.0"
-kotlin = "1.9.22"
-ksp = "1.9.22-1.0.17"
-composeBom = "2024.02.00"
+agp = "8.7.2"
+kotlin = "2.0.21"
+ksp = "2.0.21-1.0.26"
+composeBom = "2024.12.01"
 room = "2.6.1"
 hilt = "2.50"
 hiltNavigationCompose = "1.1.0"
@@ -29,6 +29,7 @@ compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 compose-animation = { group = "androidx.compose.animation", name = "animation" }
 
@@ -60,5 +61,6 @@ datastore-preferences = { group = "androidx.datastore", name = "datastore-prefer
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
