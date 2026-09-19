@@ -29,6 +29,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "aitopicapp.db"
         )
+            .addMigrations(AppDatabase.MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
     }

@@ -55,6 +55,14 @@ fun FunFactCard(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
+            if (content.codeSnippet != null) {
+                Spacer(modifier = Modifier.height(20.dp))
+                CodeBlock(
+                    code = content.codeSnippet,
+                    language = content.codeLanguage
+                )
+            }
+
             if (content.explanation != null) {
                 Spacer(modifier = Modifier.height(24.dp))
 

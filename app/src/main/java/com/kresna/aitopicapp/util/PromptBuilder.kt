@@ -2,6 +2,15 @@ package com.kresna.aitopicapp.util
 
 object PromptBuilder {
 
+    private val CODE_SNIPPET_INSTRUCTION = """
+        IMPORTANT: If the question, answer, or explanation involves code, programming, algorithms, data structures,
+        or any computer science concept that can be demonstrated with code, include a "codeSnippet" field with a
+        clean, runnable code example. Also include a "codeLanguage" field indicating the programming language
+        (e.g., "python", "javascript", "kotlin", "java", "cpp", "rust", "go", "sql", "html", "css", etc.).
+        The code snippet should be concise, well-commented, and demonstrate the concept clearly.
+        If the topic is NOT code-related, omit the "codeSnippet" and "codeLanguage" fields entirely.
+    """.trimIndent()
+
     fun buildMcqPrompt(
         topic: String,
         context: String,
@@ -24,6 +33,8 @@ object PromptBuilder {
             - Provide a brief explanation for the correct answer
             - Do NOT duplicate any of the already covered questions listed above
 
+            $CODE_SNIPPET_INSTRUCTION
+
             Return ONLY a JSON array in this exact format:
             [
               {
@@ -31,6 +42,18 @@ object PromptBuilder {
                 "options": ["A. A sorting algorithm", "B. Describing algorithm complexity", "C. A data structure", "D. A programming paradigm"],
                 "correctIndex": 1,
                 "explanation": "Big O notation is used to describe the upper bound of an algorithm's growth rate."
+              }
+            ]
+
+            For CS/coding topics, include the optional codeSnippet and codeLanguage fields:
+            [
+              {
+                "question": "Which sorting algorithm has the best average-case time complexity?",
+                "options": ["A. Bubble Sort", "B. Quick Sort", "C. Selection Sort", "D. Insertion Sort"],
+                "correctIndex": 1,
+                "explanation": "Quick Sort has an average-case time complexity of O(n log n), which is better than the O(n^2) of the other options.",
+                "codeSnippet": "def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)",
+                "codeLanguage": "python"
               }
             ]
 
@@ -58,11 +81,23 @@ object PromptBuilder {
             - Include real-world examples when relevant
             - Do NOT duplicate any of the already covered questions listed above
 
+            $CODE_SNIPPET_INSTRUCTION
+
             Return ONLY a JSON array in this exact format:
             [
               {
                 "question": "What is the difference between a stack and a queue?",
                 "answer": "A stack is LIFO (Last In, First Out) - like stacking plates. A queue is FIFO (First In, First Out) - like a line at a store."
+              }
+            ]
+
+            For CS/coding topics, include the optional codeSnippet and codeLanguage fields:
+            [
+              {
+                "question": "How does a binary search work?",
+                "answer": "Binary search divides a sorted array in half repeatedly, eliminating half the remaining elements each step, achieving O(log n) time complexity.",
+                "codeSnippet": "def binary_search(arr, target):\n    low, high = 0, len(arr) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1",
+                "codeLanguage": "python"
               }
             ]
 
@@ -90,11 +125,23 @@ object PromptBuilder {
             - Include the source or context when relevant
             - Do NOT duplicate any of the already covered facts listed above
 
+            $CODE_SNIPPET_INSTRUCTION
+
             Return ONLY a JSON array in this exact format:
             [
               {
                 "fact": "The first computer bug was an actual bug! In 1947, Grace Hopper found a moth stuck in a Harvard Mark II computer.",
                 "source": "Computer History Museum"
+              }
+            ]
+
+            For CS/coding topics, include the optional codeSnippet and codeLanguage fields:
+            [
+              {
+                "fact": "The XOR swap trick lets you swap two variables without a temporary variable using bitwise XOR.",
+                "source": "Computer Science Fundamentals",
+                "codeSnippet": "a, b = 5, 10\na ^= b\nb ^= a\na ^= b\n# Now a=10, b=5",
+                "codeLanguage": "python"
               }
             ]
 
@@ -125,6 +172,8 @@ object PromptBuilder {
             - Shuffle the items randomly so the types are mixed
             - Do NOT duplicate any of the already covered content listed above
 
+            $CODE_SNIPPET_INSTRUCTION
+
             Return ONLY a JSON array in this exact format:
             [
               {
@@ -143,6 +192,17 @@ object PromptBuilder {
                 "type": "FUN_FACT",
                 "fact": "The first computer bug was an actual bug found in 1947.",
                 "source": "Computer History Museum"
+              }
+            ]
+
+            For CS/coding topics, include the optional codeSnippet and codeLanguage fields in any item where code is relevant:
+            [
+              {
+                "type": "QA",
+                "question": "What is recursion?",
+                "answer": "Recursion is when a function calls itself to solve smaller instances of the same problem.",
+                "codeSnippet": "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)",
+                "codeLanguage": "python"
               }
             ]
 

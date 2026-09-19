@@ -57,6 +57,14 @@ fun MCQCard(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
+            if (content.codeSnippet != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                CodeBlock(
+                    code = content.codeSnippet,
+                    language = content.codeLanguage
+                )
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             content.options?.forEachIndexed { index, option ->

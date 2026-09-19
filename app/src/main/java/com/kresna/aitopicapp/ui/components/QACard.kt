@@ -90,6 +90,14 @@ fun QACard(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+
+                        if (content.codeSnippet != null) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            CodeBlock(
+                                code = content.codeSnippet,
+                                language = content.codeLanguage
+                            )
+                        }
                     }
                 }
             }

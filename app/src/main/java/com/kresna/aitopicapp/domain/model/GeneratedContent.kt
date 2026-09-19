@@ -9,6 +9,8 @@ data class GeneratedContent(
     val options: List<String>? = null,
     val correctIndex: Int? = null,
     val explanation: String? = null,
+    val codeSnippet: String? = null,
+    val codeLanguage: String? = null,
     val isViewed: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -98,6 +98,8 @@ object ContentParser {
         val options = (0 until (optionsArray?.size() ?: 0)).map { optionsArray!!.get(it).asString }
         val correctIndex = jsonObject.get("correctIndex")?.asInt ?: 0
         val explanation = jsonObject.get("explanation")?.asString
+        val codeSnippet = jsonObject.get("codeSnippet")?.asString
+        val codeLanguage = jsonObject.get("codeLanguage")?.asString
 
         return GeneratedContent(
             topicId = topicId,
@@ -105,32 +107,42 @@ object ContentParser {
             question = question,
             options = options,
             correctIndex = correctIndex,
-            explanation = explanation
+            explanation = explanation,
+            codeSnippet = codeSnippet,
+            codeLanguage = codeLanguage
         )
     }
 
     private fun parseQa(jsonObject: JsonObject, topicId: Long): GeneratedContent {
         val question = jsonObject.get("question")?.asString ?: ""
         val answer = jsonObject.get("answer")?.asString
+        val codeSnippet = jsonObject.get("codeSnippet")?.asString
+        val codeLanguage = jsonObject.get("codeLanguage")?.asString
 
         return GeneratedContent(
             topicId = topicId,
             contentType = ContentType.QA,
             question = question,
-            answer = answer
+            answer = answer,
+            codeSnippet = codeSnippet,
+            codeLanguage = codeLanguage
         )
     }
 
     private fun parseFunFact(jsonObject: JsonObject, topicId: Long): GeneratedContent {
         val fact = jsonObject.get("fact")?.asString ?: ""
         val source = jsonObject.get("source")?.asString
+        val codeSnippet = jsonObject.get("codeSnippet")?.asString
+        val codeLanguage = jsonObject.get("codeLanguage")?.asString
 
         return GeneratedContent(
             topicId = topicId,
             contentType = ContentType.FUN_FACT,
             question = "Did you know?",
             answer = fact,
-            explanation = source
+            explanation = source,
+            codeSnippet = codeSnippet,
+            codeLanguage = codeLanguage
         )
     }
 }

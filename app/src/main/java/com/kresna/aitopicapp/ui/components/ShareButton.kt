@@ -53,6 +53,13 @@ private fun buildShareText(content: GeneratedContent): String {
             if (content.explanation != null) {
                 appendLine("💡 ${content.explanation}")
             }
+            if (content.codeSnippet != null) {
+                appendLine()
+                appendLine("📝 Code (${content.codeLanguage ?: "code"}):")
+                appendLine("```${content.codeLanguage ?: ""}")
+                appendLine(content.codeSnippet)
+                appendLine("```")
+            }
         }
 
         ContentType.QA -> buildString {
@@ -61,6 +68,13 @@ private fun buildShareText(content: GeneratedContent): String {
             appendLine("❓ ${content.question}")
             appendLine()
             appendLine("💡 ${content.answer ?: ""}")
+            if (content.codeSnippet != null) {
+                appendLine()
+                appendLine("📝 Code (${content.codeLanguage ?: "code"}):")
+                appendLine("```${content.codeLanguage ?: ""}")
+                appendLine(content.codeSnippet)
+                appendLine("```")
+            }
         }
 
         ContentType.FUN_FACT -> buildString {
@@ -71,6 +85,13 @@ private fun buildShareText(content: GeneratedContent): String {
                 appendLine()
                 appendLine("📖 Source: ${content.explanation}")
             }
+            if (content.codeSnippet != null) {
+                appendLine()
+                appendLine("📝 Code (${content.codeLanguage ?: "code"}):")
+                appendLine("```${content.codeLanguage ?: ""}")
+                appendLine(content.codeSnippet)
+                appendLine("```")
+            }
         }
 
         ContentType.MIX -> buildString {
@@ -80,6 +101,13 @@ private fun buildShareText(content: GeneratedContent): String {
             if (content.answer != null) {
                 appendLine()
                 appendLine("${content.answer}")
+            }
+            if (content.codeSnippet != null) {
+                appendLine()
+                appendLine("📝 Code (${content.codeLanguage ?: "code"}):")
+                appendLine("```${content.codeLanguage ?: ""}")
+                appendLine(content.codeSnippet)
+                appendLine("```")
             }
         }
     }

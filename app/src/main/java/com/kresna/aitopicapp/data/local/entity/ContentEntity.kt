@@ -16,6 +16,8 @@ data class ContentEntity(
     val options: List<String>? = null,
     val correctIndex: Int? = null,
     val explanation: String? = null,
+    val codeSnippet: String? = null,
+    val codeLanguage: String? = null,
     val isViewed: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 ) {
@@ -28,6 +30,8 @@ data class ContentEntity(
         options = options,
         correctIndex = correctIndex,
         explanation = explanation,
+        codeSnippet = codeSnippet,
+        codeLanguage = codeLanguage,
         isViewed = isViewed,
         createdAt = createdAt
     )
@@ -42,6 +46,8 @@ data class ContentEntity(
             options = content.options,
             correctIndex = content.correctIndex,
             explanation = content.explanation,
+            codeSnippet = content.codeSnippet,
+            codeLanguage = content.codeLanguage,
             isViewed = content.isViewed,
             createdAt = content.createdAt
         )
