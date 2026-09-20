@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kresna.aitopicapp.domain.model.Topic
 import com.kresna.aitopicapp.domain.usecase.CreateTopicUseCase
 import com.kresna.aitopicapp.domain.usecase.DeleteTopicUseCase
+import com.kresna.aitopicapp.domain.usecase.GetTopicContentInfoUseCase
 import com.kresna.aitopicapp.domain.usecase.GetTopicsUseCase
 import com.kresna.aitopicapp.domain.usecase.UpdateTopicUseCase
 import com.kresna.aitopicapp.ui.common.UiState
@@ -25,7 +26,8 @@ class HomeViewModel @Inject constructor(
     private val getTopicsUseCase: GetTopicsUseCase,
     private val createTopicUseCase: CreateTopicUseCase,
     private val deleteTopicUseCase: DeleteTopicUseCase,
-    private val updateTopicUseCase: UpdateTopicUseCase
+    private val updateTopicUseCase: UpdateTopicUseCase,
+    private val getTopicContentInfoUseCase: GetTopicContentInfoUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<List<Topic>>>(UiState.Loading)
@@ -94,4 +96,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun topicContentCount(topicId: Long) = getTopicsUseCase.getContentCount(topicId)
+
+    suspend fun getTopicContentInfo(topicId: Long): com.kresna.aitopicapp.domain.usecase.TopicContentInfo {
+        return getTopicContentInfoUseCase(topicId)
+    }
 }

@@ -131,6 +131,14 @@ class ContentRepositoryImpl @Inject constructor(
             .create(BytePlusApi::class.java)
     }
 
+    override suspend fun hasContentForTopic(topicId: Long): Boolean {
+        return contentDao.hasContentForTopic(topicId)
+    }
+
+    override suspend fun getLastContentTypeForTopic(topicId: Long): ContentType? {
+        return contentDao.getLastContentTypeForTopic(topicId)
+    }
+
     private fun parseErrorBody(errorBody: String?, code: Int): String {
         if (errorBody.isNullOrBlank()) {
             return "API error: HTTP $code"

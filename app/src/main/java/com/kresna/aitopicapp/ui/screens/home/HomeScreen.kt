@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     onTopicClick: (Topic) -> Unit,
+    onTopicWithContentClick: (topicId: Long, contentType: String) -> Unit,
     onSettingsClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -162,6 +163,7 @@ fun HomeScreen(
                             SwipeToDeleteTopicItem(
                                 topic = topic,
                                 onTopicClick = onTopicClick,
+                                onTopicWithContentClick = onTopicWithContentClick,
                                 onDelete = { deletedTopic ->
                                     viewModel.deleteTopic(deletedTopic)
                                 },
@@ -209,6 +211,7 @@ fun HomeScreen(
 private fun SwipeToDeleteTopicItem(
     topic: Topic,
     onTopicClick: (Topic) -> Unit,
+    onTopicWithContentClick: (topicId: Long, contentType: String) -> Unit,
     onDelete: (Topic) -> Unit,
     onEdit: (Topic) -> Unit,
     viewModel: HomeViewModel
@@ -259,6 +262,7 @@ private fun SwipeToDeleteTopicItem(
         TopicCardContent(
             topic = topic,
             onClick = { onTopicClick(topic) },
+            onSmartClick = onTopicWithContentClick,
             onEdit = onEdit,
             viewModel = viewModel
         )
@@ -269,15 +273,30 @@ private fun SwipeToDeleteTopicItem(
 private fun TopicCardContent(
     topic: Topic,
     onClick: () -> Unit,
+    onSmartClick: (topicId: Long, contentType: String) -> Unit,
     onEdit: (Topic) -> Unit,
     viewModel: HomeViewModel
 ) {
     val contentCount by viewModel.topicContentCount(topic.id).collectAsState(initial = 0)
+    val scope = rememberCoroutineScope()
 
     TopicCard(
         topic = topic,
         contentCount = contentCount,
-        onClick = onClick,
+        onClick = {
+            if (contentCount > 0) {
+                scope.launch {
+                    val info = viewModel.getTopicContentInfo(topic.id)
+                    if (info.hasContent && info.lastContentType != null) {
+                        onSmartClick(topic.id, info.lastContentType.name)
+                    } else {
+                        onClick()
+                    }
+                }
+            } else {
+                onClick()
+            }
+        },
         onLongClick = { onEdit(topic) }
     )
 }

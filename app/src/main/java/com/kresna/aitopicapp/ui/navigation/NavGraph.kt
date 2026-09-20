@@ -33,6 +33,9 @@ fun NavGraph(navController: NavHostController) {
                 onTopicClick = { topic ->
                     navController.navigate(Screen.TopicDetail.createRoute(topic.id))
                 },
+                onTopicWithContentClick = { topicId, contentType ->
+                    navController.navigate(Screen.ContentPager.createRoute(topicId, contentType))
+                },
                 onSettingsClick = {
                     navController.navigate(Screen.Settings.route)
                 }

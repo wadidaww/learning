@@ -16,4 +16,8 @@ interface ContentRepository {
         contentType: ContentType,
         count: Int
     ): Result<List<GeneratedContent>>
+
+    suspend fun hasContentForTopic(topicId: Long): Boolean
+
+    suspend fun getLastContentTypeForTopic(topicId: Long): ContentType?
 }

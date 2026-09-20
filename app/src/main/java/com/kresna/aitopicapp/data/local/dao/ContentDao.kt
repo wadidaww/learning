@@ -30,4 +30,10 @@ interface ContentDao {
 
     @Query("SELECT question FROM generated_content WHERE topicId = :topicId")
     suspend fun getExistingQuestionsForMix(topicId: Long): List<String>
+
+    @Query("SELECT COUNT(*) > 0 FROM generated_content WHERE topicId = :topicId")
+    suspend fun hasContentForTopic(topicId: Long): Boolean
+
+    @Query("SELECT contentType FROM generated_content WHERE topicId = :topicId ORDER BY createdAt DESC LIMIT 1")
+    suspend fun getLastContentTypeForTopic(topicId: Long): ContentType?
 }
