@@ -12,25 +12,35 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,6 +51,7 @@ import com.kresna.aitopicapp.ui.components.MCQCard
 import com.kresna.aitopicapp.ui.components.PageIndicator
 import com.kresna.aitopicapp.ui.components.QACard
 import com.kresna.aitopicapp.ui.components.ShareButton
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +64,9 @@ fun ContentPagerScreen(
     val isLoadingMore by viewModel.isLoadingMore.collectAsState()
 
     val pagerState = rememberPagerState(pageCount = { contentList.size })
+    val scope = rememberCoroutineScope()
+    var showJumpDialog by remember { mutableStateOf(false) }
+    var jumpPageInput by remember { mutableStateOf("") }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
@@ -76,6 +90,18 @@ fun ContentPagerScreen(
                     }
                 },
                 actions = {
+                    if (contentList.size > 1) {
+                        IconButton(onClick = {
+                            jumpPageInput = ""
+                            showJumpDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.SwapHoriz,
+                                contentDescription = "Jump to page",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
                     if (contentList.isNotEmpty() && pagerState.currentPage < contentList.size) {
                         val content = contentList[pagerState.currentPage]
                         ShareButton(content = content)
@@ -227,5 +253,54 @@ fun ContentPagerScreen(
                 }
             }
         }
+    }
+
+    if (showJumpDialog) {
+        AlertDialog(
+            onDismissRequest = { showJumpDialog = false },
+            title = { Text("Jump to Page") },
+            text = {
+                Column {
+                    Text(
+                        text = "Enter page number (1-${contentList.size})",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = jumpPageInput,
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } && newValue.length <= 4) {
+                                jumpPageInput = newValue
+                            }
+                        },
+                        label = { Text("Page number") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val pageNumber = jumpPageInput.toIntOrNull()
+                        if (pageNumber != null && pageNumber in 1..contentList.size) {
+                            scope.launch {
+                                pagerState.scrollToPage(pageNumber - 1)
+                            }
+                        }
+                        showJumpDialog = false
+                    },
+                    enabled = jumpPageInput.toIntOrNull()?.let { it in 1..contentList.size } == true
+                ) {
+                    Text("Go")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showJumpDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
