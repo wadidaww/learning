@@ -51,6 +51,7 @@ import com.kresna.aitopicapp.ui.components.MCQCard
 import com.kresna.aitopicapp.ui.components.PageIndicator
 import com.kresna.aitopicapp.ui.components.QACard
 import com.kresna.aitopicapp.ui.components.ShareButton
+import com.kresna.aitopicapp.ui.components.UnsupportedContentCard
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -221,6 +222,7 @@ fun ContentPagerScreen(
                                 ContentType.QA -> QACard(content = contentList[page])
                                 ContentType.FUN_FACT -> FunFactCard(content = contentList[page])
                                 ContentType.MIX -> FunFactCard(content = contentList[page])
+                                else -> UnsupportedContentCard(content = contentList[page])
                             }
                         }
 

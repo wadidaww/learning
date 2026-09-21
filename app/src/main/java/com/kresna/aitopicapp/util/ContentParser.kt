@@ -80,6 +80,8 @@ object ContentParser {
 
     private fun cleanJsonResponse(response: String): String {
         var cleaned = response.trim()
+
+        // Strip outermost markdown code block markers
         if (cleaned.startsWith("```json")) {
             cleaned = cleaned.removePrefix("```json")
         }
@@ -89,7 +91,18 @@ object ContentParser {
         if (cleaned.endsWith("```")) {
             cleaned = cleaned.removeSuffix("```")
         }
-        return cleaned.trim()
+        cleaned = cleaned.trim()
+
+        // If parsing still fails, try extracting JSON array by finding first [ and last ]
+        if (!cleaned.startsWith("[")) {
+            val firstBracket = cleaned.indexOf('[')
+            val lastBracket = cleaned.lastIndexOf(']')
+            if (firstBracket >= 0 && lastBracket > firstBracket) {
+                cleaned = cleaned.substring(firstBracket, lastBracket + 1)
+            }
+        }
+
+        return cleaned
     }
 
     private fun parseMcq(jsonObject: JsonObject, topicId: Long): GeneratedContent {
