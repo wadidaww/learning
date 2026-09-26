@@ -2,6 +2,7 @@ package com.kresna.aitopicapp.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.domain.model.Topic
 import com.kresna.aitopicapp.domain.usecase.CreateTopicUseCase
 import com.kresna.aitopicapp.domain.usecase.DeleteTopicUseCase
@@ -59,9 +60,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun createTopic(name: String, description: String) {
+    fun createTopic(name: String, description: String, defaultContentType: ContentType = ContentType.MCQ) {
         viewModelScope.launch {
-            createTopicUseCase(name, description)
+            createTopicUseCase(name, description, defaultContentType)
                 .onSuccess {
                     _events.emit("Topic created")
                 }

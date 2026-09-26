@@ -14,7 +14,7 @@ import com.kresna.aitopicapp.data.local.entity.TopicEntity
 
 @Database(
     entities = [TopicEntity::class, ContentEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(ContentTypeConverter::class, StringListConverter::class)
@@ -27,6 +27,12 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE generated_content ADD COLUMN codeSnippet TEXT")
                 db.execSQL("ALTER TABLE generated_content ADD COLUMN codeLanguage TEXT")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE topics ADD COLUMN defaultContentType TEXT")
             }
         }
     }

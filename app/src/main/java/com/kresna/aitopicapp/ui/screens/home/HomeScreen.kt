@@ -184,8 +184,8 @@ fun HomeScreen(
             title = "Create New Topic",
             confirmText = "Create",
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, description ->
-                viewModel.createTopic(name, description)
+            onConfirm = { name, description, contentType ->
+                viewModel.createTopic(name, description, contentType)
                 showAddDialog = false
             }
         )
@@ -197,9 +197,16 @@ fun HomeScreen(
             confirmText = "Save",
             initialName = topic.name,
             initialDescription = topic.description,
+            initialContentType = topic.defaultContentType,
             onDismiss = { showEditDialog = null },
-            onConfirm = { name, description ->
-                viewModel.updateTopic(topic.copy(name = name, description = description))
+            onConfirm = { name, description, contentType ->
+                viewModel.updateTopic(
+                    topic.copy(
+                        name = name,
+                        description = description,
+                        defaultContentType = contentType
+                    )
+                )
                 showEditDialog = null
             }
         )

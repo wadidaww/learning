@@ -14,7 +14,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,7 +27,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -43,6 +50,7 @@ import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.ui.common.UiState
 import com.kresna.aitopicapp.ui.components.ErrorDialog
 import com.kresna.aitopicapp.ui.components.TopicCardShimmer
+import com.kresna.aitopicapp.ui.components.TopicDialog
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -55,7 +63,26 @@ fun TopicDetailScreen(
     val selectedContentType by viewModel.selectedContentType.collectAsState()
     val isGenerating by viewModel.isGenerating.collectAsState()
     val generationResult by viewModel.generationResult.collectAsState()
+    val topicDeleted by viewModel.topicDeleted.collectAsState()
     var showErrorDialog by remember { mutableStateOf<String?>(null) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+
+    LaunchedEffect(topicDeleted) {
+        if (topicDeleted) {
+            onBackClick()
+        }
+    }
 
     LaunchedEffect(generationResult) {
         when (val result = generationResult) {
@@ -90,13 +117,31 @@ fun TopicDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    if (uiState is UiState.Success) {
+                        IconButton(onClick = { showEditDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Topic"
+                            )
+                        }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete Topic"
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         when (val state = uiState) {
             is UiState.Loading -> {
@@ -128,9 +173,15 @@ fun TopicDetailScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Content Type",
+                        text = "Content Mode",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
+                    )
+
+                    Text(
+                        text = "Selection is saved as this topic's default",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -187,6 +238,49 @@ fun TopicDetailScreen(
                 }
             }
         }
+    }
+
+    if (showEditDialog) {
+        (uiState as? UiState.Success)?.data?.let { topic ->
+            TopicDialog(
+                title = "Edit Topic",
+                confirmText = "Save",
+                initialName = topic.name,
+                initialDescription = topic.description,
+                initialContentType = topic.defaultContentType,
+                onDismiss = { showEditDialog = false },
+                onConfirm = { name, description, contentType ->
+                    viewModel.saveTopic(name, description, contentType)
+                    showEditDialog = false
+                }
+            )
+        }
+    }
+
+    if (showDeleteDialog) {
+        val topicName = (uiState as? UiState.Success)?.data?.name ?: "this topic"
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Topic") },
+            text = {
+                Text("Delete \"${topicName}\"? Generated content will not be removed.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteTopic()
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     showErrorDialog?.let { errorMessage ->
