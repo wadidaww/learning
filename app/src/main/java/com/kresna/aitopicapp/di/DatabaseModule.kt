@@ -29,7 +29,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "aitopicapp.db"
         )
-            .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
+            .addMigrations(*AppDatabase.ALL_MIGRATIONS)
             .fallbackToDestructiveMigration()
             .build()
     }

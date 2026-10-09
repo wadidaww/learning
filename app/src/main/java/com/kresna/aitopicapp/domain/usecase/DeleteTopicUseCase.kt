@@ -2,6 +2,7 @@ package com.kresna.aitopicapp.domain.usecase
 
 import com.kresna.aitopicapp.domain.model.Topic
 import com.kresna.aitopicapp.domain.repository.TopicRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class DeleteTopicUseCase @Inject constructor(
@@ -11,6 +12,8 @@ class DeleteTopicUseCase @Inject constructor(
         return try {
             topicRepository.deleteTopic(topic)
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

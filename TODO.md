@@ -11,11 +11,11 @@
 
 ## Medium Priority
 
-- [ ] Add progress tracking per topic
-- [ ] Add quiz mode with score tracking
+- [x] Add progress tracking per topic
+- [x] Add quiz mode with score tracking
 - [ ] Add spaced repetition algorithm
-- [ ] Add content difficulty levels (Beginner, Intermediate, Advanced)
-- [ ] Add bookmark/favorite content
+- [x] Add content difficulty levels (Beginner, Intermediate, Advanced)
+- [x] Add bookmark/favorite content
 - [ ] Add content search functionality
 - [ ] Add statistics/analytics screen
 - [ ] Add custom prompt templates in settings
@@ -31,6 +31,7 @@
 
 ## Technical Improvements
 
+- [x] Add unit tests for parsing, dedupe and resume logic
 - [ ] Add unit tests for ViewModels
 - [ ] Add integration tests for database
 - [ ] Add UI tests with Compose Testing
@@ -77,8 +78,8 @@
 - [ ] Add data backup/restore
 - [ ] Add content export to JSON
 - [ ] Add content import from JSON
-- [ ] Add database migration support
-- [ ] Add content statistics per topic
+- [x] Add database migration support
+- [x] Add content statistics per topic
 
 ## Accessibility
 

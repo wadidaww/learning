@@ -14,7 +14,7 @@ import com.kresna.aitopicapp.data.local.entity.TopicEntity
 
 @Database(
     entities = [TopicEntity::class, ContentEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(ContentTypeConverter::class, StringListConverter::class)
@@ -35,5 +35,18 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE topics ADD COLUMN defaultContentType TEXT")
             }
         }
+
+        /** Adds MCQ answers, bookmarks, topic difficulty and a topicId index; removes orphaned content. */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE generated_content ADD COLUMN userAnswerIndex INTEGER")
+                db.execSQL("ALTER TABLE generated_content ADD COLUMN isBookmarked INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE topics ADD COLUMN difficulty TEXT")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_generated_content_topicId` ON `generated_content` (`topicId`)")
+                db.execSQL("DELETE FROM generated_content WHERE topicId NOT IN (SELECT id FROM topics)")
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
     }
 }

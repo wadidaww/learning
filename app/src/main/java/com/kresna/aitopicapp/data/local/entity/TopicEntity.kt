@@ -3,6 +3,7 @@ package com.kresna.aitopicapp.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.kresna.aitopicapp.domain.model.ContentType
+import com.kresna.aitopicapp.domain.model.Difficulty
 import com.kresna.aitopicapp.domain.model.Topic
 
 @Entity(tableName = "topics")
@@ -12,6 +13,7 @@ data class TopicEntity(
     val name: String,
     val description: String,
     val defaultContentType: String? = null,
+    val difficulty: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 ) {
     fun toDomain() = Topic(
@@ -19,6 +21,7 @@ data class TopicEntity(
         name = name,
         description = description,
         defaultContentType = ContentType.fromString(defaultContentType),
+        difficulty = Difficulty.fromString(difficulty),
         createdAt = createdAt
     )
 
@@ -28,6 +31,7 @@ data class TopicEntity(
             name = topic.name,
             description = topic.description,
             defaultContentType = topic.defaultContentType.name,
+            difficulty = topic.difficulty.name,
             createdAt = topic.createdAt
         )
     }

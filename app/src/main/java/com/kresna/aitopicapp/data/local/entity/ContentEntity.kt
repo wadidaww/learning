@@ -1,11 +1,16 @@
 package com.kresna.aitopicapp.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.domain.model.GeneratedContent
 
-@Entity(tableName = "generated_content")
+@Entity(
+    tableName = "generated_content",
+    indices = [Index(value = ["topicId"])]
+)
 data class ContentEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
@@ -19,6 +24,9 @@ data class ContentEntity(
     val codeSnippet: String? = null,
     val codeLanguage: String? = null,
     val isViewed: Boolean = false,
+    val userAnswerIndex: Int? = null,
+    @ColumnInfo(defaultValue = "0")
+    val isBookmarked: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 ) {
     fun toDomain() = GeneratedContent(
@@ -33,6 +41,8 @@ data class ContentEntity(
         codeSnippet = codeSnippet,
         codeLanguage = codeLanguage,
         isViewed = isViewed,
+        userAnswerIndex = userAnswerIndex,
+        isBookmarked = isBookmarked,
         createdAt = createdAt
     )
 
@@ -49,6 +59,8 @@ data class ContentEntity(
             codeSnippet = content.codeSnippet,
             codeLanguage = content.codeLanguage,
             isViewed = content.isViewed,
+            userAnswerIndex = content.userAnswerIndex,
+            isBookmarked = content.isBookmarked,
             createdAt = content.createdAt
         )
     }

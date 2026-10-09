@@ -17,7 +17,10 @@ data class Choice(
 
 data class ResponseMessage(
     val role: String?,
-    val content: String?
+    val content: String?,
+    /** Filled by reasoning models; it is not part of the answer. */
+    @SerializedName("reasoning_content")
+    val reasoningContent: String?
 )
 
 data class Usage(

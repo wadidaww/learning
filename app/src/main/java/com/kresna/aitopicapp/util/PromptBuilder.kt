@@ -1,222 +1,127 @@
 package com.kresna.aitopicapp.util
 
+import com.kresna.aitopicapp.domain.model.ContentType
+import com.kresna.aitopicapp.domain.model.Difficulty
+
 object PromptBuilder {
 
+    const val SYSTEM_PROMPT =
+        "You are an expert teacher who writes accurate, engaging study material. " +
+            "You always answer with valid JSON only: no markdown, no commentary."
+
     private val CODE_SNIPPET_INSTRUCTION = """
-        IMPORTANT: If the question, answer, or explanation involves code, programming, algorithms, data structures,
-        or any computer science concept that can be demonstrated with code, include a "codeSnippet" field with a
-        clean, runnable code example. Also include a "codeLanguage" field indicating the programming language
-        (e.g., "python", "javascript", "kotlin", "java", "cpp", "rust", "go", "sql", "html", "css", etc.).
-        The code snippet should be concise, well-commented, and demonstrate the concept clearly.
-        If the topic is NOT code-related, omit the "codeSnippet" and "codeLanguage" fields entirely.
+        Code: if an item involves programming, algorithms, data structures or another concept best shown with code,
+        add a "codeSnippet" field with a short, correct, commented example and a "codeLanguage" field
+        (e.g. "python", "kotlin", "javascript", "sql"). Omit both fields when code does not help.
     """.trimIndent()
 
-    fun buildMcqPrompt(
+    fun build(
+        contentType: ContentType,
         topic: String,
         context: String,
+        difficulty: Difficulty,
         count: Int,
-        existingQuestions: List<String> = emptyList()
+        existingItems: List<String> = emptyList()
     ): String {
-        return """
-            Generate $count unique multiple choice questions about: $topic
+        val task = when (contentType) {
+            ContentType.MCQ -> mcqTask(count)
+            ContentType.QA -> qaTask(count)
+            ContentType.FUN_FACT -> funFactTask(count)
+            ContentType.MIX -> mixTask()
+        }
 
-            Additional context from user: $context
-
-            ${buildExistingQuestionsSection(existingQuestions)}
-
-            Requirements:
-            - Each question must be educational and factually accurate
-            - Vary difficulty (easy, medium, hard)
-            - Make questions interesting and thought-provoking
-            - Each question has exactly 4 options (A, B, C, D)
-            - Exactly one option is correct
-            - Provide a brief explanation for the correct answer
-            - Do NOT duplicate any of the already covered questions listed above
-
-            $CODE_SNIPPET_INSTRUCTION
-
-            Return ONLY a JSON array in this exact format:
-            [
-              {
-                "question": "What is Big O notation used for?",
-                "options": ["A. A sorting algorithm", "B. Describing algorithm complexity", "C. A data structure", "D. A programming paradigm"],
-                "correctIndex": 1,
-                "explanation": "Big O notation is used to describe the upper bound of an algorithm's growth rate."
-              }
-            ]
-
-            For CS/coding topics, include the optional codeSnippet and codeLanguage fields:
-            [
-              {
-                "question": "Which sorting algorithm has the best average-case time complexity?",
-                "options": ["A. Bubble Sort", "B. Quick Sort", "C. Selection Sort", "D. Insertion Sort"],
-                "correctIndex": 1,
-                "explanation": "Quick Sort has an average-case time complexity of O(n log n), which is better than the O(n^2) of the other options.",
-                "codeSnippet": "def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)",
-                "codeLanguage": "python"
-              }
-            ]
-
-            Do not include any other text, just the JSON array.
-        """.trimIndent()
+        return buildString {
+            appendLine("Topic: $topic")
+            if (context.isNotBlank()) appendLine("Learner's focus / context: $context")
+            appendLine("Level: ${difficulty.promptHint}")
+            appendLine()
+            appendLine(task)
+            appendLine()
+            appendLine("General rules:")
+            appendLine("- Everything must be factually accurate; do not invent facts, quotes or sources.")
+            appendLine("- Each item must teach something different; cover a broad range of sub-topics instead of rephrasing one idea.")
+            appendLine("- Keep text concise and self-contained so it reads well on a phone screen.")
+            appendLine()
+            appendLine(CODE_SNIPPET_INSTRUCTION)
+            val avoid = buildExistingItemsSection(existingItems)
+            if (avoid.isNotEmpty()) {
+                appendLine()
+                appendLine(avoid)
+            }
+            appendLine()
+            append("Return ONLY the JSON array, starting with [ and ending with ]. Escape newlines inside strings as \\n.")
+        }
     }
 
-    fun buildQaPrompt(
-        topic: String,
-        context: String,
-        count: Int,
-        existingQuestions: List<String> = emptyList()
-    ): String {
-        return """
-            Generate $count unique question and answer pairs about: $topic
+    private fun mcqTask(count: Int) = """
+        Write exactly $count multiple choice questions.
+        - Exactly 4 options, exactly one correct; distractors must be plausible misconceptions, not jokes.
+        - Vary which option is correct.
+        - "explanation" says why the correct option is right AND briefly why the others are wrong.
+        - Prefer questions that test understanding or application over pure recall.
 
-            Additional context from user: $context
+        JSON format:
+        [
+          {
+            "question": "What is Big O notation used for?",
+            "options": ["A. A sorting algorithm", "B. Describing how an algorithm's cost grows with input size", "C. A data structure", "D. A programming paradigm"],
+            "correctIndex": 1,
+            "explanation": "Big O describes the growth rate of time or space. A and C are concrete algorithms/structures, D is unrelated."
+          }
+        ]
+        "correctIndex" is the 0-based index of the correct option.
+    """.trimIndent()
 
-            ${buildExistingQuestionsSection(existingQuestions)}
+    private fun qaTask(count: Int) = """
+        Write exactly $count question and answer pairs.
+        - Mix "what", "why" and "how" questions; include real-world examples where useful.
+        - Answers are clear and complete in 2-5 sentences.
 
-            Requirements:
-            - Questions should be educational and insightful
-            - Answers should be clear, detailed, and easy to understand
-            - Vary between conceptual and factual questions
-            - Include real-world examples when relevant
-            - Do NOT duplicate any of the already covered questions listed above
+        JSON format:
+        [
+          {
+            "question": "Why does a hash map offer O(1) average lookups?",
+            "answer": "It computes an index from the key's hash and jumps straight to that bucket. Collisions are rare with a good hash and load factor, so on average only a few entries are checked."
+          }
+        ]
+    """.trimIndent()
 
-            $CODE_SNIPPET_INSTRUCTION
+    private fun funFactTask(count: Int) = """
+        Write exactly $count surprising, little-known but true facts.
+        - Each fact should teach something memorable, not just trivia.
+        - "source" names where the fact comes from or its context (a person, organisation, paper or event).
 
-            Return ONLY a JSON array in this exact format:
-            [
-              {
-                "question": "What is the difference between a stack and a queue?",
-                "answer": "A stack is LIFO (Last In, First Out) - like stacking plates. A queue is FIFO (First In, First Out) - like a line at a store."
-              }
-            ]
+        JSON format:
+        [
+          {
+            "fact": "The first computer 'bug' was a real moth found in the Harvard Mark II in 1947.",
+            "source": "Grace Hopper's team log book, Smithsonian"
+          }
+        ]
+    """.trimIndent()
 
-            For CS/coding topics, include the optional codeSnippet and codeLanguage fields:
-            [
-              {
-                "question": "How does a binary search work?",
-                "answer": "Binary search divides a sorted array in half repeatedly, eliminating half the remaining elements each step, achieving O(log n) time complexity.",
-                "codeSnippet": "def binary_search(arr, target):\n    low, high = 0, len(arr) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1",
-                "codeLanguage": "python"
-              }
-            ]
+    private fun mixTask() = """
+        Write a mixed set: exactly ${Constants.MixContent.MCQ_COUNT} multiple choice questions,
+        ${Constants.MixContent.QA_COUNT} question and answer pairs and ${Constants.MixContent.FUN_FACT_COUNT} fun facts, in shuffled order.
+        Every item has a "type" field: "MCQ", "QA" or "FUN_FACT".
+        - MCQ: "question", "options" (exactly 4 strings), "correctIndex" (0-based), "explanation" (why right, why others wrong)
+        - QA: "question", "answer" (2-5 sentences)
+        - FUN_FACT: "fact", "source"
 
-            Do not include any other text, just the JSON array.
-        """.trimIndent()
-    }
+        JSON format:
+        [
+          {"type": "MCQ", "question": "...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "correctIndex": 2, "explanation": "..."},
+          {"type": "QA", "question": "...", "answer": "..."},
+          {"type": "FUN_FACT", "fact": "...", "source": "..."}
+        ]
+    """.trimIndent()
 
-    fun buildFunFactPrompt(
-        topic: String,
-        context: String,
-        count: Int,
-        existingQuestions: List<String> = emptyList()
-    ): String {
-        return """
-            Generate $count unique fun facts about: $topic
-
-            Additional context from user: $context
-
-            ${buildExistingQuestionsSection(existingQuestions)}
-
-            Requirements:
-            - Facts should be surprising, interesting, or little-known
-            - Each fact should be educational
-            - Make them engaging and memorable
-            - Include the source or context when relevant
-            - Do NOT duplicate any of the already covered facts listed above
-
-            $CODE_SNIPPET_INSTRUCTION
-
-            Return ONLY a JSON array in this exact format:
-            [
-              {
-                "fact": "The first computer bug was an actual bug! In 1947, Grace Hopper found a moth stuck in a Harvard Mark II computer.",
-                "source": "Computer History Museum"
-              }
-            ]
-
-            For CS/coding topics, include the optional codeSnippet and codeLanguage fields:
-            [
-              {
-                "fact": "The XOR swap trick lets you swap two variables without a temporary variable using bitwise XOR.",
-                "source": "Computer Science Fundamentals",
-                "codeSnippet": "a, b = 5, 10\na ^= b\nb ^= a\na ^= b\n# Now a=10, b=5",
-                "codeLanguage": "python"
-              }
-            ]
-
-            Do not include any other text, just the JSON array.
-        """.trimIndent()
-    }
-
-    fun buildMixPrompt(
-        topic: String,
-        context: String,
-        count: Int = Constants.MixContent.TOTAL,
-        existingQuestions: List<String> = emptyList()
-    ): String {
-        return """
-            Generate a mix of content about: $topic
-
-            Additional context from user: $context
-
-            ${buildExistingQuestionsSection(existingQuestions)}
-
-            Requirements:
-            - Generate exactly ${Constants.MixContent.MCQ_COUNT} multiple choice questions, ${Constants.MixContent.QA_COUNT} question and answer pairs, and ${Constants.MixContent.FUN_FACT_COUNT} fun facts
-            - Each item must have a "type" field: "MCQ", "QA", or "FUN_FACT"
-            - MCQ items: "question", "options" (4 options as strings), "correctIndex" (0-3), "explanation"
-            - QA items: "question", "answer"
-            - FUN_FACT items: "fact", "source"
-            - All content must be educational and factually accurate
-            - Shuffle the items randomly so the types are mixed
-            - Do NOT duplicate any of the already covered content listed above
-
-            $CODE_SNIPPET_INSTRUCTION
-
-            Return ONLY a JSON array in this exact format:
-            [
-              {
-                "type": "MCQ",
-                "question": "What is Big O notation used for?",
-                "options": ["A. A sorting algorithm", "B. Describing algorithm complexity", "C. A data structure", "D. A programming paradigm"],
-                "correctIndex": 1,
-                "explanation": "Big O notation describes the upper bound of an algorithm's growth rate."
-              },
-              {
-                "type": "QA",
-                "question": "What is the difference between a stack and a queue?",
-                "answer": "A stack is LIFO (Last In, First Out). A queue is FIFO (First In, First Out)."
-              },
-              {
-                "type": "FUN_FACT",
-                "fact": "The first computer bug was an actual bug found in 1947.",
-                "source": "Computer History Museum"
-              }
-            ]
-
-            For CS/coding topics, include the optional codeSnippet and codeLanguage fields in any item where code is relevant:
-            [
-              {
-                "type": "QA",
-                "question": "What is recursion?",
-                "answer": "Recursion is when a function calls itself to solve smaller instances of the same problem.",
-                "codeSnippet": "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)",
-                "codeLanguage": "python"
-              }
-            ]
-
-            Do not include any other text, just the JSON array.
-        """.trimIndent()
-    }
-
-    private fun buildExistingQuestionsSection(existingQuestions: List<String>): String {
-        if (existingQuestions.isEmpty()) return ""
-        val limited = existingQuestions.takeLast(Constants.EXISTING_QUESTIONS_LIMIT)
-        val questionList = limited.joinToString("\n") { "- $it" }
-        return """
-            IMPORTANT: The following questions/topics have already been covered. Generate completely different and unique content. Do NOT repeat or rephrase any of these:
-            $questionList
-        """.trimIndent()
+    private fun buildExistingItemsSection(existingItems: List<String>): String {
+        val recent = existingItems
+            .filter { it.isNotBlank() }
+            .takeLast(Constants.EXISTING_QUESTIONS_LIMIT)
+        if (recent.isEmpty()) return ""
+        val list = recent.joinToString("\n") { "- " + it.replace('\n', ' ').take(Constants.EXISTING_QUESTION_MAX_CHARS) }
+        return "Already covered (do NOT repeat or rephrase these; pick new angles and sub-topics):\n$list"
     }
 }

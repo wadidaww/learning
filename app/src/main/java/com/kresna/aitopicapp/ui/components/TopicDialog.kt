@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kresna.aitopicapp.domain.model.ContentType
+import com.kresna.aitopicapp.domain.model.Difficulty
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -33,12 +34,14 @@ fun TopicDialog(
     initialName: String = "",
     initialDescription: String = "",
     initialContentType: ContentType = ContentType.MCQ,
+    initialDifficulty: Difficulty = Difficulty.MIXED,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, description: String, contentType: ContentType) -> Unit
+    onConfirm: (name: String, description: String, contentType: ContentType, difficulty: Difficulty) -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
     var description by remember { mutableStateOf(initialDescription) }
     var contentType by remember { mutableStateOf(initialContentType) }
+    var difficulty by remember { mutableStateOf(initialDifficulty) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -94,13 +97,36 @@ fun TopicDialog(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Difficulty",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Difficulty.entries.forEach { level ->
+                        FilterChip(
+                            selected = difficulty == level,
+                            onClick = { difficulty = level },
+                            label = { Text(level.displayName) }
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     if (name.isNotBlank()) {
-                        onConfirm(name, description, contentType)
+                        onConfirm(name, description, contentType, difficulty)
                     }
                 },
                 enabled = name.isNotBlank()

@@ -2,23 +2,21 @@ package com.kresna.aitopicapp.domain.usecase
 
 import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.domain.model.GeneratedContent
+import com.kresna.aitopicapp.domain.model.Topic
 import com.kresna.aitopicapp.domain.repository.ContentRepository
+import com.kresna.aitopicapp.util.Constants
 import javax.inject.Inject
 
 class GenerateContentUseCase @Inject constructor(
     private val contentRepository: ContentRepository
 ) {
     suspend operator fun invoke(
-        topicId: Long,
-        topicName: String,
-        topicDescription: String,
+        topic: Topic,
         contentType: ContentType,
-        count: Int
+        count: Int = Constants.DEFAULT_BATCH_SIZE
     ): Result<List<GeneratedContent>> {
         return contentRepository.generateContent(
-            topicId = topicId,
-            topicName = topicName,
-            topicDescription = topicDescription,
+            topic = topic,
             contentType = contentType,
             count = count
         )

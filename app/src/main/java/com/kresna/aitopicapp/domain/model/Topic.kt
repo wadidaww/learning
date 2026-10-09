@@ -5,5 +5,6 @@ data class Topic(
     val name: String,
     val description: String,
     val defaultContentType: ContentType = ContentType.MCQ,
+    val difficulty: Difficulty = Difficulty.MIXED,
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -41,7 +41,7 @@ fun QACard(
     content: GeneratedContent,
     modifier: Modifier = Modifier
 ) {
-    var isAnswerVisible by remember { mutableStateOf(false) }
+    var isAnswerVisible by remember(content.id) { mutableStateOf(false) }
     val context = LocalContext.current
 
     ContentCardWrapper(modifier = modifier) {

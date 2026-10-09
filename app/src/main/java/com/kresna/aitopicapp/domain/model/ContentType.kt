@@ -7,12 +7,7 @@ enum class ContentType(val displayName: String) {
     MIX("Mix");
 
     companion object {
-        fun fromString(value: String?): ContentType {
-            return try {
-                valueOf(value ?: "")
-            } catch (e: IllegalArgumentException) {
-                MCQ
-            }
-        }
+        fun fromString(value: String?): ContentType =
+            entries.firstOrNull { it.name == value } ?: MCQ
     }
 }
