@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(./gradlew installDebug:*)",
+      "Bash(./gradlew testDebugUnitTest:*)",
+      "Bash(./gradlew lintDebug:*)",
+      "Bash(./gradlew compileDebugKotlin:*)",
+      "Bash(./gradlew tasks:*)",
+      "Bash(./gradlew dependencies:*)",
+      "Bash(adb devices:*)",
+      "Bash(adb logcat:*)",
+      "Bash(adb exec-out screencap:*)",
+      "Bash(adb shell pidof:*)",
+      "Bash(adb shell am start:*)",
+      "Bash(adb shell am force-stop:*)",
+      "Bash(adb exec-out run-as com.kresna.aitopicapp cat:*)",
+      "Bash(sqlite3 aitopic.db:*)"
+    ],
+    "ask": [
+      "Bash(adb shell pm clear:*)",
+      "Bash(adb uninstall:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/kotlin-edit-guard.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,1 +1,34 @@
 .env
+
+# Gradle / build outputs
+.gradle/
+build/
+/app/build/
+/captures
+.externalNativeBuild/
+.cxx/
+
+# Local machine config (SDK path, signing)
+local.properties
+*.keystore
+*.jks
+
+# IDE (keep shared code style, ignore per-user state)
+.idea/caches/
+.idea/workspace.xml
+.idea/deviceManager.xml
+.idea/deploymentTargetSelector.xml
+.idea/libraries/
+.idea/modules.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+*.iml
+
+# Kotlin
+.kotlin/
+
+# OS
+.DS_Store
+
+# Claude Code per-user overrides
+.claude/settings.local.json
