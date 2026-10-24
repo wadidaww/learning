@@ -2,6 +2,7 @@ package com.kresna.aitopicapp.domain.usecase
 
 import com.kresna.aitopicapp.domain.model.Topic
 import com.kresna.aitopicapp.domain.repository.TopicRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class UpdateTopicUseCase @Inject constructor(
@@ -14,6 +15,8 @@ class UpdateTopicUseCase @Inject constructor(
             }
             topicRepository.updateTopic(topic.copy(name = topic.name.trim(), description = topic.description.trim()))
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

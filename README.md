@@ -5,15 +5,19 @@ An Android application that uses BytePlus ModelArk AI to generate educational co
 ## Features
 
 - **Multiple Topics**: Create and manage multiple learning topics
-- **AI-Generated Content**: Generate MCQs, Q&A, and Fun Facts using BytePlus AI
-- **Swipeable Interface**: Swipe between generated content cards
+- **AI-Generated Content**: Generate MCQs, Q&A, Fun Facts or a Mix using BytePlus AI
+- **Endless Learning Feed**: Content is ordered oldest to newest; new batches are appended to the end and generated automatically as you approach it
+- **Resume Where You Left Off**: Opening a topic jumps to the next unseen item
+- **Difficulty Levels**: Beginner, Intermediate, Advanced or Mixed per topic
+- **Quiz Tracking**: MCQ answers are saved; see accuracy per topic and retry questions
+- **Review Modes**: Practise missed questions or go through bookmarked cards
+- **Progress Dashboard**: Seen / answered / accuracy per topic, on the home screen and topic screen
+- **Reliable Generation**: Tolerant parsing of AI output, duplicate filtering, automatic retries and clear error messages
 - **Offline Support**: Access previously generated content without internet
-- **Share Content**: Share questions and facts with friends
-- **Edit & Delete**: Long-press to edit topics, swipe to delete
+- **Share & Copy**: Share or copy questions and facts
+- **Edit & Delete**: Long-press to edit topics, swipe to delete (with confirmation)
 - **Model Selection**: Choose from 9+ AI models in settings
 - **Region Selection**: Select API region (Asia Pacific or Europe)
-- **Error Handling**: Retry on failures with error dialogs
-- **Loading Effects**: Shimmer loading animations
 
 ## Architecture
 
@@ -83,7 +87,7 @@ app/src/main/java/com/kresna/aitopicapp/
 │   ├── remote/                    # BytePlus API
 │   └── repository/                # Repository Implementations
 ├── di/                            # Dependency Injection
-│   ├── qualifiers/                # IoDispatcher, DefaultDispatcher
+│   ├── IoDispatcher.kt, ...       # Dispatcher qualifiers
 │   ├── DatabaseModule.kt          # Room, DAOs, Repository bindings
 │   ├── DispatcherModule.kt        # Coroutine dispatchers
 │   └── NetworkModule.kt           # Retrofit, OkHttp, API
@@ -97,7 +101,7 @@ app/src/main/java/com/kresna/aitopicapp/
 │   ├── navigation/                # NavGraph
 │   ├── screens/                   # Screen composables + ViewModels
 │   └── theme/                     # Material3 Theme
-└── util/                          # Utilities (PromptBuilder, ContentParser)
+└── util/                          # PromptBuilder, ContentParser, ContentDeduplicator, LearningPosition
 ```
 
 ## Tech Stack
@@ -113,6 +117,14 @@ app/src/main/java/com/kresna/aitopicapp/
 | Retrofit | HTTP client |
 | Gson | JSON serialization |
 | BytePlus ModelArk | AI content generation |
+
+## Testing
+
+Pure-Kotlin logic (response parsing, duplicate filtering, resume position, prompts) is covered by JVM unit tests:
+
+```bash
+./gradlew testDebugUnitTest
+```
 
 ## License
 

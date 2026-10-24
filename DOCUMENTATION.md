@@ -131,26 +131,35 @@ class SettingsDataStore @Inject constructor(
 #### `TopicDao.kt`
 ```kotlin
 // Key operations
-fun getAllTopics(): Flow<List<TopicEntity>>     // Observe all topics
-suspend fun insertTopic(topic: TopicEntity): Long  // Insert new topic
-suspend fun deleteTopic(topic: TopicEntity)     // Delete topic
-fun getContentCount(topicId: Long): Flow<Int>  // Get content count
+fun observeTopicsWithProgress(): Flow<List<TopicWithProgressRow>>  // Topics + progress in one query
+suspend fun insertTopic(topic: TopicEntity): Long
+suspend fun deleteTopic(topic: TopicEntity)     // Repository also deletes the topic's content
 ```
 
 #### `ContentDao.kt`
 ```kotlin
-// Key operations
-fun getUnviewedContent(topicId: Long): Flow<List<ContentEntity>>
-fun getAllContentForTopic(topicId: Long): Flow<List<ContentEntity>>
-suspend fun insertAll(content: List<ContentEntity>)
+// All lists are ordered oldest first (createdAt ASC, id ASC)
+fun observeByTopicAndType(topicId: Long, contentType: ContentType): Flow<List<ContentEntity>>
+fun observeAllForTopic(topicId: Long): Flow<List<ContentEntity>>
+fun observeBookmarked(topicId: Long) / observeMissed(topicId: Long)
+fun observeProgress(topicId: Long): Flow<ProgressRow>
+suspend fun insertAll(content: List<ContentEntity>): List<Long>
 suspend fun markAsViewed(contentId: Long)
+suspend fun setUserAnswer(contentId: Long, answerIndex: Int?)
+suspend fun setBookmarked(contentId: Long, bookmarked: Boolean)
 ```
+
+Database version 5 adds `userAnswerIndex`, `isBookmarked`, `topics.difficulty` and an index on
+`generated_content.topicId` (`MIGRATION_4_5`).
 
 #### `BytePlusApi.kt`
 ```kotlin
 interface BytePlusApi {
     @POST("chat/completions")
-    suspend fun chatCompletions(@Body request: BytePlusRequest): BytePlusResponse
+    suspend fun chatCompletions(
+        @Header("Authorization") authorization: String,
+        @Body request: BytePlusRequest
+    ): Response<BytePlusResponse>
 }
 ```
 
@@ -158,11 +167,10 @@ interface BytePlusApi {
 Main repository handling both local DB and remote API calls:
 ```kotlin
 suspend fun generateContent(
-    topicName: String,
-    topicDescription: String,
+    topic: Topic,
     contentType: ContentType,
     count: Int
-): Result<List<GeneratedContent>>
+): Result<List<GeneratedContent>>   // never success(emptyList()); fails with GenerationException
 ```
 
 ### Domain Layer
@@ -231,42 +239,51 @@ val availableRegions: List<Region>
 
 ### Content Generation Flow
 ```
-User taps "Generate Content"
+User taps "Generate" (topic screen) or nears the end of the pager
     │
     ▼
-TopicDetailViewModel.generateContent()
+GenerateContentUseCase(topic, contentType)
     │
     ▼
-ContentRepository.generateContent()
+ContentRepositoryImpl.generateContent()   (serialised by a Mutex)
     │
-    ├──▶ PromptBuilder.buildPrompt()
-    │
-    ├──▶ BytePlusApi.chatCompletions()
-    │
-    ├──▶ ContentParser.parseResponse()
-    │
-    └──▶ ContentDao.insertAll()
+    ├──▶ ContentDao.getDedupeTexts()          existing questions / facts, oldest first
+    ├──▶ PromptBuilder.build()                topic, difficulty, avoid-list
+    ├──▶ BytePlusApi.chatCompletions()        system + user message
+    ├──▶ ContentParser.parse()                tolerant JSON parsing, salvages truncated output
+    ├──▶ ContentDeduplicator.filterNew()      drops repeats (fun facts compared by fact text)
+    └──▶ ContentDao.insertAll()               increasing createdAt → appended at the end
     │
     ▼
-UI updates with generated content
+Room Flow emits the longer list → pager shows the new items after the existing ones
 ```
+
+Up to 3 attempts are made for retryable failures (network errors, timeouts, HTTP 408/429/5xx,
+unparseable output, only-duplicate output). A generation never "succeeds" with zero items: it fails
+with a `GenerationException` whose message is shown to the user with a Retry action.
 
 ### Content Viewing Flow
 ```
-ContentPagerScreen loads
+ContentPagerScreen opens (topicId, contentType, filter)
     │
     ▼
-ContentPagerViewModel.loadContent()
+ContentRepository.observeContent()       ORDER BY createdAt ASC, id ASC
     │
     ▼
-ContentDao.getUnviewedContent()
+LearningPosition.startIndex()            first unviewed item after the furthest viewed one
     │
     ▼
-HorizontalPager displays cards
+pager scrolls there once, then marks each settled page as viewed
     │
     ▼
-User swipes -> markAsViewed()
+within PREFETCH_THRESHOLD of the end → next batch is generated in the background
+    │
+    ▼
+trailing status page shows "generating", the error + Try again, or "Generate more"
 ```
+
+Filters: `ALL` (learning feed, generates more), `BOOKMARKED` and `MISSED` (review modes, fixed
+snapshot of matching items, no generation).
 
 ### Settings Flow
 ```

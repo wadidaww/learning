@@ -6,6 +6,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -41,9 +43,14 @@ import com.kresna.aitopicapp.ui.theme.SuccessGreen
 @Composable
 fun MCQCard(
     content: GeneratedContent,
+    onAnswer: (Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedOption by remember { mutableIntStateOf(-1) }
+    // Local copy for instant feedback; synced with the stored answer, keyed per item because
+    // pager pages are reused for different items.
+    var selectedOption by remember(content.id, content.userAnswerIndex) {
+        mutableIntStateOf(content.userAnswerIndex ?: -1)
+    }
     val isRevealed = selectedOption >= 0
     val context = LocalContext.current
 
@@ -90,6 +97,7 @@ fun MCQCard(
                         onClick = {
                             if (!isRevealed) {
                                 selectedOption = index
+                                onAnswer(index)
                             }
                         },
                         modifier = Modifier
@@ -115,6 +123,26 @@ fun MCQCard(
                                 else -> MaterialTheme.colorScheme.onSurface
                             }
                         )
+                    }
+                }
+
+                if (isRevealed) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    val isCorrect = selectedOption == content.correctIndex
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (isCorrect) "Correct!" else "Not quite",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isCorrect) SuccessGreen else ErrorRed
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        TextButton(onClick = {
+                            selectedOption = -1
+                            onAnswer(null)
+                        }) {
+                            Text("Try again")
+                        }
                     }
                 }
 

@@ -95,4 +95,7 @@ dependencies {
 
     // DataStore
     implementation(libs.datastore.preferences)
+
+    // Testing
+    testImplementation(libs.junit)
 }

@@ -4,20 +4,25 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kresna.aitopicapp.domain.model.ContentType
-import com.kresna.aitopicapp.domain.model.GeneratedContent
+import com.kresna.aitopicapp.domain.model.Difficulty
+import com.kresna.aitopicapp.domain.model.GenerationException
 import com.kresna.aitopicapp.domain.model.Topic
+import com.kresna.aitopicapp.domain.model.TopicProgress
+import com.kresna.aitopicapp.domain.repository.ContentRepository
 import com.kresna.aitopicapp.domain.usecase.DeleteTopicUseCase
 import com.kresna.aitopicapp.domain.usecase.GenerateContentUseCase
 import com.kresna.aitopicapp.domain.usecase.GetTopicsUseCase
 import com.kresna.aitopicapp.domain.usecase.UpdateTopicUseCase
 import com.kresna.aitopicapp.ui.common.UiState
-import com.kresna.aitopicapp.util.Constants
+import com.kresna.aitopicapp.ui.navigation.NavArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,17 +32,17 @@ class TopicDetailViewModel @Inject constructor(
     private val getTopicsUseCase: GetTopicsUseCase,
     private val generateContentUseCase: GenerateContentUseCase,
     private val updateTopicUseCase: UpdateTopicUseCase,
-    private val deleteTopicUseCase: DeleteTopicUseCase
+    private val deleteTopicUseCase: DeleteTopicUseCase,
+    contentRepository: ContentRepository
 ) : ViewModel() {
 
-    companion object {
-        private const val DEFAULT_BATCH_SIZE = Constants.DEFAULT_BATCH_SIZE
-    }
-
-    private val topicId: Long = savedStateHandle.get<Long>("topicId") ?: 0L
+    private val topicId: Long = savedStateHandle.get<Long>(NavArgs.TOPIC_ID) ?: 0L
 
     private val _uiState = MutableStateFlow<UiState<Topic>>(UiState.Loading)
     val uiState: StateFlow<UiState<Topic>> = _uiState.asStateFlow()
+
+    val progress: StateFlow<TopicProgress> = contentRepository.observeProgress(topicId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TopicProgress())
 
     private val _selectedContentType = MutableStateFlow(ContentType.MCQ)
     val selectedContentType: StateFlow<ContentType> = _selectedContentType.asStateFlow()
@@ -52,7 +57,6 @@ class TopicDetailViewModel @Inject constructor(
     val events = _events.asSharedFlow()
 
     private val _isDeleting = MutableStateFlow(false)
-    val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
 
     private val _topicDeleted = MutableStateFlow(false)
     val topicDeleted: StateFlow<Boolean> = _topicDeleted.asStateFlow()
@@ -78,52 +82,52 @@ class TopicDetailViewModel @Inject constructor(
         }
     }
 
+    private val currentTopic: Topic? get() = (_uiState.value as? UiState.Success)?.data
+
     fun selectContentType(type: ContentType) {
-        val topic = (_uiState.value as? UiState.Success)?.data ?: return
-        if (_selectedContentType.value == type && topic.defaultContentType == type) return
-
+        val topic = currentTopic ?: return
         _selectedContentType.value = type
-
-        if (topic.defaultContentType == type) return
-
-        viewModelScope.launch {
-            updateTopicUseCase(topic.copy(defaultContentType = type))
-                .onSuccess {
-                    val latest = (_uiState.value as? UiState.Success)?.data
-                    if (latest != null) {
-                        _uiState.value = UiState.Success(latest.copy(defaultContentType = type))
-                    }
-                    _events.emit("Saved as default mode")
-                }
-                .onFailure { e ->
-                    _events.emit(e.message ?: "Failed to save default mode")
-                }
+        if (topic.defaultContentType != type) {
+            persist(topic.copy(defaultContentType = type), "Saved as default mode")
         }
     }
 
-    fun saveTopic(name: String, description: String, defaultContentType: ContentType) {
-        val topic = (_uiState.value as? UiState.Success)?.data ?: return
-        val updatedTopic = topic.copy(
-            name = name.trim(),
-            description = description.trim(),
-            defaultContentType = defaultContentType
-        )
+    fun selectDifficulty(difficulty: Difficulty) {
+        val topic = currentTopic ?: return
+        if (topic.difficulty != difficulty) {
+            persist(topic.copy(difficulty = difficulty), "Difficulty set to ${difficulty.displayName}")
+        }
+    }
 
+    fun saveTopic(name: String, description: String, defaultContentType: ContentType, difficulty: Difficulty) {
+        val topic = currentTopic ?: return
+        _selectedContentType.value = defaultContentType
+        persist(
+            topic.copy(
+                name = name.trim(),
+                description = description.trim(),
+                defaultContentType = defaultContentType,
+                difficulty = difficulty
+            ),
+            "Topic updated"
+        )
+    }
+
+    private fun persist(updatedTopic: Topic, successMessage: String) {
+        // Optimistic update so chips react immediately.
+        _uiState.value = UiState.Success(updatedTopic)
         viewModelScope.launch {
             updateTopicUseCase(updatedTopic)
-                .onSuccess {
-                    _uiState.value = UiState.Success(updatedTopic)
-                    _selectedContentType.value = updatedTopic.defaultContentType
-                    _events.emit("Topic updated")
-                }
+                .onSuccess { _events.emit(successMessage) }
                 .onFailure { e ->
+                    loadTopic()
                     _events.emit(e.message ?: "Failed to update topic")
                 }
         }
     }
 
     fun deleteTopic() {
-        val topic = (_uiState.value as? UiState.Success)?.data ?: return
+        val topic = currentTopic ?: return
         if (_isDeleting.value) return
 
         viewModelScope.launch {
@@ -140,24 +144,24 @@ class TopicDetailViewModel @Inject constructor(
     }
 
     fun generateContent() {
-        val topic = (_uiState.value as? UiState.Success)?.data ?: return
+        val topic = currentTopic ?: return
+        if (_isGenerating.value) return
 
         viewModelScope.launch {
             _isGenerating.value = true
             _generationResult.value = null
 
-            val result = generateContentUseCase(
-                topicId = topicId,
-                topicName = topic.name,
-                topicDescription = topic.description,
-                contentType = _selectedContentType.value,
-                count = DEFAULT_BATCH_SIZE
-            )
-
-            _generationResult.value = result.fold(
-                onSuccess = { GenerationResult.Success(it) },
-                onFailure = { GenerationResult.Error(it.message ?: "Unknown error") }
-            )
+            val contentType = _selectedContentType.value
+            _generationResult.value = generateContentUseCase(topic.copy(defaultContentType = contentType), contentType)
+                .fold(
+                    onSuccess = { GenerationResult.Success(contentType, it.size) },
+                    onFailure = {
+                        GenerationResult.Error(
+                            message = it.message ?: "Unknown error",
+                            isRetryable = (it as? GenerationException)?.isRetryable ?: true
+                        )
+                    }
+                )
 
             _isGenerating.value = false
         }
@@ -169,6 +173,6 @@ class TopicDetailViewModel @Inject constructor(
 }
 
 sealed class GenerationResult {
-    data class Success(val content: List<GeneratedContent>) : GenerationResult()
-    data class Error(val message: String) : GenerationResult()
+    data class Success(val contentType: ContentType, val count: Int) : GenerationResult()
+    data class Error(val message: String, val isRetryable: Boolean) : GenerationResult()
 }

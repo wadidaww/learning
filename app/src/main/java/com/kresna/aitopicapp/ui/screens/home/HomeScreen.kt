@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -25,6 +26,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -34,35 +36,34 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kresna.aitopicapp.domain.model.Topic
+import com.kresna.aitopicapp.domain.model.TopicOverview
 import com.kresna.aitopicapp.ui.common.UiState
 import com.kresna.aitopicapp.ui.components.TopicCard
 import com.kresna.aitopicapp.ui.components.TopicCardShimmer
 import com.kresna.aitopicapp.ui.components.TopicDialog
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onTopicClick: (Topic) -> Unit,
-    onTopicWithContentClick: (topicId: Long, contentType: String) -> Unit,
+    onTopicDetails: (Topic) -> Unit,
+    onContinueLearning: (Topic) -> Unit,
     onSettingsClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val topics by viewModel.topics.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf<Topic?>(null) }
+    var pendingDelete by remember { mutableStateOf<Topic?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { message ->
@@ -104,7 +105,7 @@ fun HomeScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        when (uiState) {
+        when (val state = uiState) {
             is UiState.Loading -> {
                 LazyColumn(
                     modifier = Modifier
@@ -127,7 +128,7 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = (uiState as UiState.Error).message,
+                        text = state.message,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -135,6 +136,7 @@ fun HomeScreen(
             }
 
             is UiState.Success -> {
+                val topics = state.data
                 if (topics.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -145,7 +147,8 @@ fun HomeScreen(
                         Text(
                             text = "No topics yet.\nTap + to create one!",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
                     }
                 } else {
@@ -158,19 +161,21 @@ fun HomeScreen(
                     ) {
                         items(
                             items = topics,
-                            key = { it.id }
-                        ) { topic ->
+                            key = { it.topic.id }
+                        ) { overview ->
                             SwipeToDeleteTopicItem(
-                                topic = topic,
-                                onTopicClick = onTopicClick,
-                                onTopicWithContentClick = onTopicWithContentClick,
-                                onDelete = { deletedTopic ->
-                                    viewModel.deleteTopic(deletedTopic)
+                                overview = overview,
+                                onClick = {
+                                    // Topics with content resume learning directly; new topics open their setup screen.
+                                    if (overview.progress.total > 0) {
+                                        onContinueLearning(overview.topic)
+                                    } else {
+                                        onTopicDetails(overview.topic)
+                                    }
                                 },
-                                onEdit = { editTopic ->
-                                    showEditDialog = editTopic
-                                },
-                                viewModel = viewModel
+                                onDetails = { onTopicDetails(overview.topic) },
+                                onDelete = { pendingDelete = overview.topic },
+                                onEdit = { showEditDialog = overview.topic }
                             )
                         }
                     }
@@ -184,8 +189,8 @@ fun HomeScreen(
             title = "Create New Topic",
             confirmText = "Create",
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, description, contentType ->
-                viewModel.createTopic(name, description, contentType)
+            onConfirm = { name, description, contentType, difficulty ->
+                viewModel.createTopic(name, description, contentType, difficulty)
                 showAddDialog = false
             }
         )
@@ -198,16 +203,39 @@ fun HomeScreen(
             initialName = topic.name,
             initialDescription = topic.description,
             initialContentType = topic.defaultContentType,
+            initialDifficulty = topic.difficulty,
             onDismiss = { showEditDialog = null },
-            onConfirm = { name, description, contentType ->
+            onConfirm = { name, description, contentType, difficulty ->
                 viewModel.updateTopic(
                     topic.copy(
                         name = name,
                         description = description,
-                        defaultContentType = contentType
+                        defaultContentType = contentType,
+                        difficulty = difficulty
                     )
                 )
                 showEditDialog = null
+            }
+        )
+    }
+
+    pendingDelete?.let { topic ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text("Delete Topic") },
+            text = { Text("Delete \"${topic.name}\" and all of its generated content? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteTopic(topic)
+                    pendingDelete = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) {
+                    Text("Cancel")
+                }
             }
         )
     }
@@ -216,21 +244,19 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeToDeleteTopicItem(
-    topic: Topic,
-    onTopicClick: (Topic) -> Unit,
-    onTopicWithContentClick: (topicId: Long, contentType: String) -> Unit,
-    onDelete: (Topic) -> Unit,
-    onEdit: (Topic) -> Unit,
-    viewModel: HomeViewModel
+    overview: TopicOverview,
+    onClick: () -> Unit,
+    onDetails: () -> Unit,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
             if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                onDelete(topic)
-                true
-            } else {
-                false
+                // Ask for confirmation first; the card springs back either way.
+                onDelete()
             }
+            false
         }
     )
 
@@ -266,44 +292,12 @@ private fun SwipeToDeleteTopicItem(
         },
         enableDismissFromStartToEnd = false
     ) {
-        TopicCardContent(
-            topic = topic,
-            onClick = { onTopicClick(topic) },
-            onSmartClick = onTopicWithContentClick,
-            onEdit = onEdit,
-            viewModel = viewModel
+        TopicCard(
+            topic = overview.topic,
+            progress = overview.progress,
+            onClick = onClick,
+            onDetailsClick = onDetails,
+            onLongClick = onEdit
         )
     }
-}
-
-@Composable
-private fun TopicCardContent(
-    topic: Topic,
-    onClick: () -> Unit,
-    onSmartClick: (topicId: Long, contentType: String) -> Unit,
-    onEdit: (Topic) -> Unit,
-    viewModel: HomeViewModel
-) {
-    val contentCount by viewModel.topicContentCount(topic.id).collectAsState(initial = 0)
-    val scope = rememberCoroutineScope()
-
-    TopicCard(
-        topic = topic,
-        contentCount = contentCount,
-        onClick = {
-            if (contentCount > 0) {
-                scope.launch {
-                    val info = viewModel.getTopicContentInfo(topic.id)
-                    if (info.hasContent && info.lastContentType != null) {
-                        onSmartClick(topic.id, info.lastContentType.name)
-                    } else {
-                        onClick()
-                    }
-                }
-            } else {
-                onClick()
-            }
-        },
-        onLongClick = { onEdit(topic) }
-    )
 }

@@ -1,11 +1,9 @@
 package com.kresna.aitopicapp.di
 
-import com.kresna.aitopicapp.data.local.SettingsDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -14,21 +12,19 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    /**
+     * Generating a batch can take well over a minute on larger or reasoning models,
+     * so the read timeout is generous. The API key is sent per request by the repository.
+     */
     @Provides
     @Singleton
-    fun provideOkHttpClient(settingsDataStore: SettingsDataStore): OkHttpClient {
+    fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .addInterceptor { chain ->
-                val apiKey = runBlocking { settingsDataStore.getSettings().apiKey }
-                val request = chain.request().newBuilder()
-                    .header("Authorization", "Bearer $apiKey")
-                    .header("Content-Type", "application/json")
-                    .build()
-                chain.proceed(request)
-            }
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(150, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(180, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build()
     }
 }
