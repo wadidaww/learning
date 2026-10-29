@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
@@ -124,34 +126,49 @@ class FeedScreenshotTest {
         card: @Composable () -> Unit
     ) {
         paparazzi.snapshot {
-            AITopicLearningTheme {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    card()
-                    FeedHeader(
-                        title = "Data structures",
-                        subtitle = "Mixed feed",
-                        progress = progress,
-                        combo = combo,
-                        showCombo = combo >= 3,
-                        accent = accent,
-                        onBack = {},
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 28.dp)
-                    )
-                    if (rail) {
-                        FeedActionRail(
-                            isBookmarked = bookmarked,
-                            onToggleBookmark = {},
-                            onShare = {},
-                            onCopy = {},
-                            onStats = {},
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(end = 8.dp, bottom = 40.dp)
-                        )
-                    }
+            // Entrance animations start at their final size in inspection mode (one frame is rendered).
+            CompositionLocalProvider(LocalInspectionMode provides true) {
+                AITopicLearningTheme {
+                    FeedScreen(accent, progress, combo, rail, bookmarked, card)
                 }
+            }
+        }
+    }
+
+    @Composable
+    private fun FeedScreen(
+        accent: CardStyle,
+        progress: FeedProgress,
+        combo: Int,
+        rail: Boolean,
+        bookmarked: Boolean,
+        card: @Composable () -> Unit
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            card()
+            FeedHeader(
+                title = "Data structures",
+                subtitle = "Mixed feed",
+                progress = progress,
+                combo = combo,
+                showCombo = combo >= 3,
+                accent = accent,
+                onBack = {},
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 28.dp)
+            )
+            if (rail) {
+                FeedActionRail(
+                    isBookmarked = bookmarked,
+                    onToggleBookmark = {},
+                    onShare = {},
+                    onCopy = {},
+                    onStats = {},
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 8.dp, bottom = 40.dp)
+                )
             }
         }
     }

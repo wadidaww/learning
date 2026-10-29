@@ -54,6 +54,13 @@ they cannot compile. In the cloud, rely on the GitHub Actions workflow
 (`.github/workflows/android.yml`) to compile, test and lint a PR, and say clearly in the PR
 that the change was not built locally.
 
+**Screenshots without a device:** `FeedScreenshotTest` (Paparazzi) renders feed cards to PNGs during
+`testDebugUnitTest` (`app/build/reports/paparazzi/`); CI uploads them as the `screenshots` artifact.
+Cloud sessions can't download artifacts, so on PRs CI also prints JPEG copies to the job log between
+`=== SCREENSHOT-BEGIN <file>` / `=== SCREENSHOT-END` markers: fetch the log with the GitHub MCP
+`get_job_logs` (`return_content=true`, large `tail_lines`; big results are saved to a file), strip the
+timestamp prefix from each line and base64-decode the lines between the markers.
+
 ## Conventions
 
 - Clean Architecture: UI -> use case -> repository interface (domain) -> impl (data). ViewModels never touch DAOs or Retrofit directly.
