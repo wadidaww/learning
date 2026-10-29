@@ -13,12 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -39,20 +33,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.kresna.aitopicapp.domain.model.ContentFilter
 import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.domain.model.GeneratedContent
+import com.kresna.aitopicapp.ui.components.FeedActionRail
 import com.kresna.aitopicapp.ui.components.FeedHeader
 import com.kresna.aitopicapp.ui.components.FeedProgress
 import com.kresna.aitopicapp.ui.components.FunFactCard
 import com.kresna.aitopicapp.ui.components.GenerationStatusCard
 import com.kresna.aitopicapp.ui.components.MCQCard
 import com.kresna.aitopicapp.ui.components.QACard
-import com.kresna.aitopicapp.ui.components.RailAction
 import com.kresna.aitopicapp.ui.components.RunSummaryCard
 import com.kresna.aitopicapp.ui.components.UnsupportedContentCard
 import com.kresna.aitopicapp.ui.components.copyContentToClipboard
-import com.kresna.aitopicapp.ui.components.rememberFeedHaptics
 import com.kresna.aitopicapp.ui.components.shareContent
 import com.kresna.aitopicapp.ui.theme.CardStyle
-import com.kresna.aitopicapp.ui.theme.Gold
 import com.kresna.aitopicapp.util.Constants
 import com.kresna.aitopicapp.util.FeedPage
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -187,41 +179,14 @@ private fun ActionRail(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val haptics = rememberFeedHaptics()
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    FeedActionRail(
+        isBookmarked = content.isBookmarked,
+        onToggleBookmark = onToggleBookmark,
+        onShare = { shareContent(content, context) },
+        onCopy = { copyContentToClipboard(context, content) },
+        onStats = onTopicDetails,
         modifier = modifier
-    ) {
-        RailAction(
-            icon = if (content.isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-            label = if (content.isBookmarked) "Saved" else "Save",
-            contentDescription = if (content.isBookmarked) "Remove from saved cards" else "Save card for review",
-            tint = if (content.isBookmarked) Gold else MaterialTheme.colorScheme.onBackground,
-            onClick = {
-                haptics.tap()
-                onToggleBookmark()
-            }
-        )
-        RailAction(
-            icon = Icons.Default.Share,
-            label = "Share",
-            contentDescription = "Share card",
-            onClick = { shareContent(content, context) }
-        )
-        RailAction(
-            icon = Icons.Default.ContentCopy,
-            label = "Copy",
-            contentDescription = "Copy card text",
-            onClick = { copyContentToClipboard(context, content) }
-        )
-        RailAction(
-            icon = Icons.Default.Insights,
-            label = "Stats",
-            contentDescription = "Topic progress",
-            onClick = onTopicDetails
-        )
-    }
+    )
 }
 
 private fun progressFor(state: ContentPagerUiState, page: FeedPage?, pageIndex: Int): FeedProgress? {

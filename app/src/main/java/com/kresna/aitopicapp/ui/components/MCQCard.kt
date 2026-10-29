@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -233,7 +234,8 @@ private fun OptionButton(
 
 @Composable
 private fun FeedbackBanner(isCorrect: Boolean, correctLetter: Char?, onReset: () -> Unit) {
-    val pop = remember { Animatable(0.6f) }
+    val inspection = LocalInspectionMode.current
+    val pop = remember { Animatable(if (inspection) 1f else 0.6f) }
     LaunchedEffect(Unit) {
         pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
     }

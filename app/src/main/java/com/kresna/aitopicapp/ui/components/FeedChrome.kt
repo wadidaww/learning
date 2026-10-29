@@ -25,6 +25,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -48,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kresna.aitopicapp.ui.theme.Amber
 import com.kresna.aitopicapp.ui.theme.CardStyle
+import com.kresna.aitopicapp.ui.theme.Gold
 import com.kresna.aitopicapp.ui.theme.Orange
 
 /** Where the user is in the feed, for the header's progress display. */
@@ -206,5 +212,37 @@ fun RailAction(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
+    }
+}
+
+/** Right-hand action rail of the feed, like the buttons beside a short video. */
+@Composable
+fun FeedActionRail(
+    isBookmarked: Boolean,
+    onToggleBookmark: () -> Unit,
+    onShare: () -> Unit,
+    onCopy: () -> Unit,
+    onStats: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptics = rememberFeedHaptics()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        RailAction(
+            icon = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+            label = if (isBookmarked) "Saved" else "Save",
+            contentDescription = if (isBookmarked) "Remove from saved cards" else "Save card for review",
+            tint = if (isBookmarked) Gold else MaterialTheme.colorScheme.onBackground,
+            onClick = {
+                haptics.tap()
+                onToggleBookmark()
+            }
+        )
+        RailAction(icon = Icons.Default.Share, label = "Share", contentDescription = "Share card", onClick = onShare)
+        RailAction(icon = Icons.Default.ContentCopy, label = "Copy", contentDescription = "Copy card text", onClick = onCopy)
+        RailAction(icon = Icons.Default.Insights, label = "Stats", contentDescription = "Topic progress", onClick = onStats)
     }
 }

@@ -38,9 +38,10 @@ import com.kresna.aitopicapp.ui.theme.CardStyle
 @Composable
 fun QACard(
     content: GeneratedContent,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initiallyFlipped: Boolean = false
 ) {
-    var isFlipped by remember(content.id) { mutableStateOf(false) }
+    var isFlipped by remember(content.id) { mutableStateOf(initiallyFlipped) }
     val rotation by animateFloatAsState(
         targetValue = if (isFlipped) 180f else 0f,
         animationSpec = tween(durationMillis = 450),

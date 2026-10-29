@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
@@ -26,7 +27,9 @@ fun FunFactCard(
     content: GeneratedContent,
     modifier: Modifier = Modifier
 ) {
-    val emojiScale = remember(content.id) { Animatable(0.4f) }
+    // Previews and screenshot tests render a single frame, so start them at the final size.
+    val inspection = LocalInspectionMode.current
+    val emojiScale = remember(content.id) { Animatable(if (inspection) 1f else 0.4f) }
     LaunchedEffect(content.id) {
         emojiScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessLow))
     }

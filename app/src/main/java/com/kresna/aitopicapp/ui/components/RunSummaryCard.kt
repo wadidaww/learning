@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,7 +50,8 @@ fun RunSummaryCard(
         accuracy >= 50 -> "💪" to "Solid run!"
         else -> "🌱" to "Good effort, it'll stick next time"
     }
-    val pop = remember(stats.runNumber) { Animatable(0.3f) }
+    val inspection = LocalInspectionMode.current
+    val pop = remember(stats.runNumber) { Animatable(if (inspection) 1f else 0.3f) }
     LaunchedEffect(stats.runNumber) {
         pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessLow))
     }
