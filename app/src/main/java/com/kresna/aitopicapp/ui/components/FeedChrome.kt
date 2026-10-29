@@ -24,12 +24,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.BookmarkBorder
+import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -43,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -51,10 +51,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kresna.aitopicapp.ui.theme.Amber
 import com.kresna.aitopicapp.ui.theme.CardStyle
-import com.kresna.aitopicapp.ui.theme.Gold
-import com.kresna.aitopicapp.ui.theme.Orange
+import com.kresna.aitopicapp.ui.theme.AppTheme
 
 /** Where the user is in the feed, for the header's progress display. */
 sealed interface FeedProgress {
@@ -85,11 +83,11 @@ fun FeedHeader(
             IconButton(
                 onClick = onBack,
                 colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = Color.Black.copy(alpha = 0.25f),
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                     contentColor = MaterialTheme.colorScheme.onBackground
                 )
             ) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -144,7 +142,7 @@ private fun RunProgressBar(progress: FeedProgress.Run, accent: CardStyle) {
     ) {
         repeat(progress.total) { index ->
             val color by animateColorAsState(
-                targetValue = if (index < progress.filled) accent.accent else Color.White.copy(alpha = 0.18f),
+                targetValue = if (index < progress.filled) accent.accent else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
                 label = "runSegment"
             )
             Box(
@@ -166,17 +164,20 @@ private fun ComboChip(combo: Int) {
         bounce.snapTo(1.3f)
         bounce.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessMedium))
     }
-    Text(
-        text = "🔥 x$combo",
-        style = MaterialTheme.typography.labelLarge,
-        color = Color.White,
+    val amber = AppTheme.palette.amber
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .scale(bounce.value)
             .clip(RoundedCornerShape(50))
-            .background(Brush.horizontalGradient(listOf(Orange, Amber)))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .semantics { contentDescription = "$combo correct in a row" }
-    )
+            .background(amber.copy(alpha = 0.16f))
+            .padding(start = 8.dp, end = 12.dp, top = 5.dp, bottom = 5.dp)
+            .semantics(mergeDescendants = true) { contentDescription = "$combo correct in a row" }
+    ) {
+        Icon(Icons.Rounded.LocalFireDepartment, contentDescription = null, tint = amber, modifier = Modifier.size(18.dp))
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = "x$combo", style = MaterialTheme.typography.labelLarge, color = amber)
+    }
 }
 
 /** One button of the right-hand action rail: a round icon with a short caption. */
@@ -202,7 +203,7 @@ fun RailAction(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color.Black.copy(alpha = 0.28f))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
         ) {
             Icon(imageVector = icon, contentDescription = null, tint = tint)
         }
@@ -232,17 +233,17 @@ fun FeedActionRail(
         modifier = modifier
     ) {
         RailAction(
-            icon = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+            icon = if (isBookmarked) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
             label = if (isBookmarked) "Saved" else "Save",
             contentDescription = if (isBookmarked) "Remove from saved cards" else "Save card for review",
-            tint = if (isBookmarked) Gold else MaterialTheme.colorScheme.onBackground,
+            tint = if (isBookmarked) AppTheme.palette.saved else MaterialTheme.colorScheme.onBackground,
             onClick = {
                 haptics.tap()
                 onToggleBookmark()
             }
         )
-        RailAction(icon = Icons.Default.Share, label = "Share", contentDescription = "Share card", onClick = onShare)
-        RailAction(icon = Icons.Default.ContentCopy, label = "Copy", contentDescription = "Copy card text", onClick = onCopy)
-        RailAction(icon = Icons.Default.Insights, label = "Stats", contentDescription = "Topic progress", onClick = onStats)
+        RailAction(icon = Icons.Rounded.Share, label = "Share", contentDescription = "Share card", onClick = onShare)
+        RailAction(icon = Icons.Rounded.ContentCopy, label = "Copy", contentDescription = "Copy card text", onClick = onCopy)
+        RailAction(icon = Icons.Rounded.BarChart, label = "Stats", contentDescription = "Topic progress", onClick = onStats)
     }
 }

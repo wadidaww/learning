@@ -12,8 +12,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.TrendingUp
+import androidx.compose.material.icons.rounded.Eco
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,11 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.kresna.aitopicapp.ui.theme.AppTheme
 import com.kresna.aitopicapp.ui.theme.CardStyle
 import com.kresna.aitopicapp.util.RunStats
 
@@ -44,11 +54,12 @@ fun RunSummaryCard(
     modifier: Modifier = Modifier
 ) {
     val accuracy = stats.accuracyPercent
-    val (emoji, headline) = when {
-        accuracy == null -> "🏁" to "Run complete!"
-        accuracy >= 80 -> "🏆" to "Brilliant run!"
-        accuracy >= 50 -> "💪" to "Solid run!"
-        else -> "🌱" to "Good effort, it'll stick next time"
+    val palette = AppTheme.palette
+    val (icon, tint, headline) = when {
+        accuracy == null -> Triple(Icons.Rounded.Flag, palette.violet, "Run complete!")
+        accuracy >= 80 -> Triple(Icons.Rounded.EmojiEvents, palette.amber, "Brilliant run!")
+        accuracy >= 50 -> Triple(Icons.AutoMirrored.Rounded.TrendingUp, palette.teal, "Solid run!")
+        else -> Triple(Icons.Rounded.Eco, palette.teal, "Good effort, it'll stick next time")
     }
     val inspection = LocalInspectionMode.current
     val pop = remember(stats.runNumber) { Animatable(if (inspection) 1f else 0.3f) }
@@ -62,13 +73,7 @@ fun RunSummaryCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
-        Text(
-            text = emoji,
-            fontSize = 72.sp,
-            modifier = Modifier
-                .scale(pop.value)
-                .clearAndSetSemantics { }
-        )
+        IconBadge(icon = icon, tint = tint, size = 88.dp, modifier = Modifier.scale(pop.value))
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = headline,
@@ -85,7 +90,13 @@ fun RunSummaryCard(
                 label = "correct",
                 modifier = Modifier.weight(1f)
             )
-            StatTile(value = "🔥 ${stats.bestStreak}", label = "best streak", modifier = Modifier.weight(1f))
+            StatTile(
+                value = "${stats.bestStreak}",
+                label = "best streak",
+                icon = Icons.Rounded.LocalFireDepartment,
+                iconTint = palette.amber,
+                modifier = Modifier.weight(1f)
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -112,7 +123,13 @@ fun RunSummaryCard(
 }
 
 @Composable
-private fun StatTile(value: String, label: String, modifier: Modifier = Modifier) {
+private fun StatTile(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    iconTint: Color = MaterialTheme.colorScheme.onBackground
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -120,7 +137,13 @@ private fun StatTile(value: String, label: String, modifier: Modifier = Modifier
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
             .padding(vertical = 14.dp, horizontal = 8.dp)
     ) {
-        Text(text = value, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Text(text = value, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+        }
         Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

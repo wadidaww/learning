@@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,8 +56,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.kresna.aitopicapp.domain.model.GeneratedContent
 import com.kresna.aitopicapp.ui.theme.CardStyle
-import com.kresna.aitopicapp.ui.theme.ErrorRed
-import com.kresna.aitopicapp.ui.theme.SuccessGreen
+import com.kresna.aitopicapp.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -166,19 +167,21 @@ private fun OptionButton(
     accent: Color,
     onClick: () -> Unit
 ) {
+    val success = AppTheme.palette.success
+    val error = AppTheme.palette.error
     val border by animateColorAsState(
         targetValue = when (state) {
-            OptionState.Correct -> SuccessGreen
-            OptionState.Wrong -> ErrorRed
+            OptionState.Correct -> success
+            OptionState.Wrong -> error
             else -> MaterialTheme.colorScheme.outlineVariant
         },
         label = "optionBorder"
     )
     val fill by animateColorAsState(
         targetValue = when (state) {
-            OptionState.Correct -> SuccessGreen.copy(alpha = 0.18f)
-            OptionState.Wrong -> ErrorRed.copy(alpha = 0.18f)
-            else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
+            OptionState.Correct -> success.copy(alpha = 0.14f)
+            OptionState.Wrong -> error.copy(alpha = 0.14f)
+            else -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
         },
         label = "optionFill"
     )
@@ -210,16 +213,16 @@ private fun OptionButton(
                 .clip(CircleShape)
                 .background(
                     when (state) {
-                        OptionState.Correct -> SuccessGreen
-                        OptionState.Wrong -> ErrorRed
-                        else -> accent.copy(alpha = 0.22f)
+                        OptionState.Correct -> success
+                        OptionState.Wrong -> error
+                        else -> accent.copy(alpha = 0.16f)
                     }
                 )
         ) {
             when (state) {
-                OptionState.Correct -> Icon(Icons.Default.Check, contentDescription = "Correct answer", tint = Color.White, modifier = Modifier.size(18.dp))
-                OptionState.Wrong -> Icon(Icons.Default.Close, contentDescription = "Your answer, incorrect", tint = Color.White, modifier = Modifier.size(18.dp))
-                else -> Text(text = letter.toString(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground)
+                OptionState.Correct -> Icon(Icons.Rounded.Check, contentDescription = "Correct answer", tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
+                OptionState.Wrong -> Icon(Icons.Rounded.Close, contentDescription = "Your answer, incorrect", tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
+                else -> Text(text = letter.toString(), style = MaterialTheme.typography.labelLarge, color = accent)
             }
         }
         Spacer(modifier = Modifier.width(12.dp))
@@ -239,15 +242,27 @@ private fun FeedbackBanner(isCorrect: Boolean, correctLetter: Char?, onReset: ()
     LaunchedEffect(Unit) {
         pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
     }
+    val color = if (isCorrect) AppTheme.palette.success else AppTheme.palette.error
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = if (isCorrect) "🎉 Nailed it!" else "Not quite" + (correctLetter?.let { ". It's $it." } ?: "."),
-            style = MaterialTheme.typography.titleLarge,
-            color = if (isCorrect) SuccessGreen else ErrorRed,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
                 .scale(pop.value)
-        )
+        ) {
+            Icon(
+                imageVector = if (isCorrect) Icons.Rounded.CheckCircle else Icons.Rounded.Cancel,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(26.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (isCorrect) "Nailed it!" else "Not quite" + (correctLetter?.let { ". It's $it." } ?: "."),
+                style = MaterialTheme.typography.titleLarge,
+                color = color
+            )
+        }
         TextButton(onClick = onReset) {
             Text("Try again")
         }

@@ -5,6 +5,8 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,15 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kresna.aitopicapp.domain.model.GeneratedContent
 import com.kresna.aitopicapp.ui.theme.CardStyle
-import com.kresna.aitopicapp.ui.theme.VioletLight
 
-/** A fun fact shown as a "Spark": one surprising idea, big and bold. */
+/** A fun fact shown as a "Spark": one surprising idea, big and clear. */
 @Composable
 fun FunFactCard(
     content: GeneratedContent,
@@ -34,19 +33,18 @@ fun FunFactCard(
         emojiScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessLow))
     }
 
-    FeedCard(style = CardStyle.Spark, modifier = modifier) {
-        Text(
-            text = "🤯",
-            fontSize = 64.sp,
-            modifier = Modifier
-                .scale(emojiScale.value)
-                .clearAndSetSemantics { }
+    val style = CardStyle.Spark
+    FeedCard(style = style, modifier = modifier) {
+        IconBadge(
+            icon = Icons.Rounded.Lightbulb,
+            tint = style.accent,
+            modifier = Modifier.scale(emojiScale.value)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Did you know?",
             style = MaterialTheme.typography.titleLarge,
-            color = VioletLight
+            color = style.accent
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(

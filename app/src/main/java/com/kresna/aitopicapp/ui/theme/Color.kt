@@ -2,36 +2,70 @@ package com.kresna.aitopicapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Base surfaces: near-black, slightly blue, so the neon accents pop.
-val Ink950 = Color(0xFF0B0B12)
-val Ink900 = Color(0xFF12121B)
-val Ink850 = Color(0xFF16161F)
-val Ink800 = Color(0xFF1E1E2A)
-val Ink700 = Color(0xFF2A2A3A)
-val Ink500 = Color(0xFF6B6B80)
-val Ink300 = Color(0xFFB4B4C7)
-val Ink100 = Color(0xFFEDEDF5)
+// Calm night (dark): soft charcoal instead of pure black and off-white text, to cut glare and
+// the "halo" effect of bright text on black.
+val Night0 = Color(0xFF121318)
+val Night1 = Color(0xFF1A1B22)
+val Night2 = Color(0xFF23242D)
+val Night3 = Color(0xFF2E2F3A)
+val NightOutline = Color(0xFF4A4B58)
+val NightText = Color(0xFFE6E4EF)
+val NightTextMuted = Color(0xFFA9A7B8)
 
-// Brand accents.
-val Violet = Color(0xFF8B5CF6)
-val VioletLight = Color(0xFFC4B5FD)
-val Pink = Color(0xFFEC4899)
-val Blue = Color(0xFF3B82F6)
-val Cyan = Color(0xFF22D3EE)
-val Teal = Color(0xFF14B8A6)
-val Sky = Color(0xFF38BDF8)
-val Orange = Color(0xFFF97316)
-val Amber = Color(0xFFFBBF24)
-val Lime = Color(0xFFA3E635)
-val Gold = Color(0xFFFACC15)
+// Day (light): warm paper instead of stark white.
+val Day0 = Color(0xFFF7F5F0)
+val Day1 = Color(0xFFFFFDF9)
+val Day2 = Color(0xFFEFECE5)
+val Day3 = Color(0xFFE4E0D7)
+val DayOutline = Color(0xFFB9B4A8)
+val DayText = Color(0xFF2B2A33)
+val DayTextMuted = Color(0xFF5F5D6B)
 
-// Feedback colors, tuned to stay readable on the dark surfaces.
-val SuccessGreen = Color(0xFF22C55E)
-val ErrorRed = Color(0xFFF43F5E)
-val WarningYellow = Color(0xFFFBBF24)
-val InfoBlue = Color(0xFF38BDF8)
+/**
+ * Accent and feedback colours for one theme. Dark uses soft pastels (bright saturated colours
+ * vibrate on dark backgrounds); light uses deeper tones that keep 4.5:1 contrast on paper.
+ */
+data class AppPalette(
+    val isDark: Boolean,
+    val violet: Color,
+    val pink: Color,
+    val blue: Color,
+    val cyan: Color,
+    val teal: Color,
+    val sky: Color,
+    val amber: Color,
+    val orange: Color,
+    val success: Color,
+    val error: Color,
+    val saved: Color
+)
 
-// Light theme counterparts.
-val Paper = Color(0xFFF8F7FC)
-val PaperCard = Color(0xFFFFFFFF)
-val VioletDark = Color(0xFF6D28D9)
+val NightPalette = AppPalette(
+    isDark = true,
+    violet = Color(0xFFB4A2F8),
+    pink = Color(0xFFF2A7C9),
+    blue = Color(0xFF8DB4F7),
+    cyan = Color(0xFF86D8E3),
+    teal = Color(0xFF7FD1C0),
+    sky = Color(0xFF9CCDF0),
+    amber = Color(0xFFF2CF8B),
+    orange = Color(0xFFF4B183),
+    success = Color(0xFF7ED6A1),
+    error = Color(0xFFF08A9B),
+    saved = Color(0xFFEDCB6B)
+)
+
+val DayPalette = AppPalette(
+    isDark = false,
+    violet = Color(0xFF6D55C9),
+    pink = Color(0xFFB9497F),
+    blue = Color(0xFF3567C2),
+    cyan = Color(0xFF1F8796),
+    teal = Color(0xFF21806F),
+    sky = Color(0xFF2F79A8),
+    amber = Color(0xFF9A6A12),
+    orange = Color(0xFFB5602A),
+    success = Color(0xFF2E8B57),
+    error = Color(0xFFC2415A),
+    saved = Color(0xFFA57A00)
+)

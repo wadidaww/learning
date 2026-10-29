@@ -71,10 +71,10 @@ fun QACard(
                 .clip(shape)
                 .background(
                     Brush.linearGradient(
-                        listOf(style.start.copy(alpha = 0.22f), style.end.copy(alpha = 0.10f))
+                        listOf(style.accent.copy(alpha = 0.14f), style.accentEnd.copy(alpha = 0.06f))
                     )
                 )
-                .border(1.5.dp, style.accent.copy(alpha = 0.6f), shape)
+                .border(1.dp, style.accent.copy(alpha = 0.45f), shape)
                 .clickable(
                     onClickLabel = if (isFlipped) "Show question" else "Reveal answer",
                     role = Role.Button
