@@ -28,7 +28,7 @@ util/     PromptBuilder (prompt text), ContentParser (AI JSON -> domain), Consta
 3. reads settings (`SettingsDataStore`), existing questions (`ContentDao`), builds prompt (`PromptBuilder`)
 4. POST `chat/completions` (Retrofit built per call from region base URL; auth header added in `NetworkModule` interceptor)
 5. `ContentParser.parseResponse` / `parseMixResponse` -> filter duplicates -> `ContentDao.insertAll`
-6. `ContentPagerViewModel` observes the DAO `Flow` and renders `MCQCard` / `QACard` / `FunFactCard`
+6. `ContentPagerViewModel` observes the DAO `Flow`, lays it out with `FeedLayout` (runs of 10 cards + a `RunSummaryCard` + a trailing status page) and `ContentPagerScreen` renders it as a full-screen `VerticalPager` feed of `MCQCard` / `QACard` (flashcard) / `FunFactCard` (Spark)
 
 ### Navigation
 
@@ -59,7 +59,8 @@ that the change was not built locally.
 - Clean Architecture: UI -> use case -> repository interface (domain) -> impl (data). ViewModels never touch DAOs or Retrofit directly.
 - State: each ViewModel exposes `StateFlow`s; one-shot messages go through a `MutableSharedFlow<String>` collected into a `SnackbarHostState`. Shared `UiState<T>` (`Loading` / `Success` / `Error`) lives in `ui/common/UiState.kt`.
 - Repositories and use cases return `Result<T>`; do not throw across layers.
-- Compose: screens take callbacks + `hiltViewModel()`; components are stateless where possible. Use `MaterialTheme` colors (no hardcoded colors except the code-block palette).
+- Compose: screens take callbacks + `hiltViewModel()`; components are stateless where possible. Use `MaterialTheme` colors and the palette in `ui/theme/Color.kt`; card-type gradients come from `ui/theme/CardStyle.kt`. The app is dark-first (`AITopicLearningTheme(darkTheme = true, dynamicColor = false)`).
+- Feed cards are built on `FeedCard` (full-bleed, leaves room for the overlay header and the right-hand action rail); use `rememberFeedHaptics()` for answer feedback.
 - New user-facing strings: keep them short, specific, and actionable (see `.claude/rules/ui-compose.md`).
 - Keep `PromptBuilder` (what we ask for) and `ContentParser` (what we accept) in sync — they are one contract.
 - Room schema changes require a version bump **and** a `Migration` added in `AppDatabase` + registered in `DatabaseModule`. `fallbackToDestructiveMigration()` is on, so a forgotten migration silently wipes user data.

@@ -1,32 +1,11 @@
 package com.kresna.aitopicapp.ui.components
 
 import android.content.Intent
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.domain.model.GeneratedContent
 
-@Composable
-fun ShareButton(content: GeneratedContent) {
-    val context = LocalContext.current
-
-    IconButton(
-        onClick = { shareContent(content, context) }
-    ) {
-        Icon(
-            imageVector = Icons.Default.Share,
-            contentDescription = "Share",
-            tint = MaterialTheme.colorScheme.onPrimary
-        )
-    }
-}
-
-private fun shareContent(content: GeneratedContent, context: android.content.Context) {
+/** Opens the system share sheet with a card as plain text. */
+fun shareContent(content: GeneratedContent, context: android.content.Context) {
     val shareText = buildShareText(content)
 
     val intent = Intent(Intent.ACTION_SEND).apply {

@@ -66,7 +66,7 @@ fun TopicCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = topic.name,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
