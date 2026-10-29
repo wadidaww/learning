@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // System bar icons follow the system light/dark setting, like the app theme.
         enableEdgeToEdge()
         setContent {
             AITopicLearningTheme {

@@ -1,15 +1,12 @@
 package com.kresna.aitopicapp.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -21,8 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kresna.aitopicapp.ui.screens.content.GenerationStatus
+import com.kresna.aitopicapp.ui.theme.CardStyle
 
-/** Trailing pager page: shows that more content is being generated, why it failed, or offers more. */
+/** Trailing feed page: shows that more content is being generated, why it failed, or offers more. */
 @Composable
 fun GenerationStatusCard(
     status: GenerationStatus,
@@ -30,55 +28,52 @@ fun GenerationStatusCard(
     onGenerate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ContentCardWrapper(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            when (status) {
-                GenerationStatus.Running -> {
-                    CircularProgressIndicator(modifier = Modifier.size(48.dp))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    StatusText(
-                        title = if (hasContent) "Generating more content..." else "Generating your first batch...",
-                        body = "New items are added to the end of the list. This can take up to a minute."
-                    )
-                }
+    FeedCard(
+        style = CardStyle.Spark,
+        label = "",
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        when (status) {
+            GenerationStatus.Running -> {
+                CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+                StatusText(
+                    title = if (hasContent) "Cooking up your next cards..." else "Creating your first cards...",
+                    body = "New cards appear right here. This can take up to a minute."
+                )
+            }
 
-                is GenerationStatus.Failed -> {
-                    Icon(
-                        imageVector = Icons.Default.CloudOff,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    StatusText(title = "Couldn't generate content", body = status.message)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = onGenerate) {
-                        Text("Try again")
-                    }
+            is GenerationStatus.Failed -> {
+                Icon(
+                    imageVector = Icons.Rounded.CloudOff,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                StatusText(title = "Couldn't make new cards", body = status.message)
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = onGenerate, modifier = Modifier.fillMaxWidth()) {
+                    Text("Try again")
                 }
+            }
 
-                GenerationStatus.Idle -> {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    StatusText(
-                        title = "You're all caught up",
-                        body = "Generate a fresh batch to keep learning."
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = onGenerate) {
-                        Text("Generate more")
-                    }
+            GenerationStatus.Idle -> {
+                Icon(
+                    imageVector = Icons.Rounded.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                StatusText(
+                    title = "You're all caught up",
+                    body = "Get a fresh set of cards to keep going."
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = onGenerate, modifier = Modifier.fillMaxWidth()) {
+                    Text("Get more cards")
                 }
             }
         }
@@ -89,9 +84,9 @@ fun GenerationStatusCard(
 private fun StatusText(title: String, body: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleLarge,
+        style = MaterialTheme.typography.headlineSmall,
         textAlign = TextAlign.Center,
-        color = MaterialTheme.colorScheme.onSurface
+        color = MaterialTheme.colorScheme.onBackground
     )
     Spacer(modifier = Modifier.height(8.dp))
     Text(

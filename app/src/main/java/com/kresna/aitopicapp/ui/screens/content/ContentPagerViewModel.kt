@@ -12,6 +12,8 @@ import com.kresna.aitopicapp.domain.usecase.GenerateContentUseCase
 import com.kresna.aitopicapp.domain.usecase.GetTopicsUseCase
 import com.kresna.aitopicapp.ui.navigation.NavArgs
 import com.kresna.aitopicapp.util.Constants
+import com.kresna.aitopicapp.util.FeedLayout
+import com.kresna.aitopicapp.util.FeedPage
 import com.kresna.aitopicapp.util.LearningPosition
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -41,10 +43,17 @@ data class ContentPagerUiState(
     val startPageConsumed: Boolean = false,
     val generation: GenerationStatus = GenerationStatus.Idle,
     /** Number of items added since the screen was opened, to show a "new" hint. */
-    val newItemsCount: Int = 0
+    val newItemsCount: Int = 0,
+    /** Feed pages: cards, run summaries and the trailing status page. */
+    val pages: List<FeedPage> = emptyList(),
+    /** Consecutive correct quiz answers in this session. */
+    val combo: Int = 0
 ) {
     /** Only the regular learning mode generates more content; review modes are fixed lists. */
     val canGenerate: Boolean get() = filter == ContentFilter.ALL
+
+    /** Runs with summaries only make sense in the open-ended learning feed. */
+    val hasRuns: Boolean get() = filter == ContentFilter.ALL
 }
 
 @HiltViewModel
@@ -65,6 +74,9 @@ class ContentPagerViewModel @Inject constructor(
     /** Ids already marked as viewed in this session, to avoid redundant database writes. */
     private val markedViewed = HashSet<Long>()
 
+    /** Ids whose first answer in this session already counted towards the combo, so retries don't inflate it. */
+    private val comboCounted = HashSet<Long>()
+
     init {
         viewModelScope.launch {
             getTopicsUseCase.observe(topicId).collect { topic ->
@@ -83,6 +95,7 @@ class ContentPagerViewModel @Inject constructor(
                 state.copy(
                     isLoading = false,
                     content = list,
+                    pages = FeedLayout.build(list, withRunSummaries = state.hasRuns, withStatusPage = state.canGenerate),
                     startPage = if (isFirstEmission && list.isNotEmpty()) startPageFor(list) else state.startPage,
                     startPageConsumed = state.startPageConsumed || (isFirstEmission && list.isEmpty()),
                     newItemsCount = (list.size - initialCount).coerceAtLeast(0)
@@ -108,18 +121,22 @@ class ContentPagerViewModel @Inject constructor(
     }
 
     private fun startPageFor(list: List<GeneratedContent>): Int =
-        if (filter == ContentFilter.ALL) LearningPosition.startIndex(list) else 0
+        if (filter == ContentFilter.ALL) {
+            FeedLayout.pageOf(LearningPosition.startIndex(list), withRunSummaries = true)
+        } else {
+            0
+        }
 
     fun onStartPageConsumed() {
         _uiState.update { it.copy(startPageConsumed = true) }
     }
 
-    /** Called when the pager settles on [page]; the page after the last item is the status page. */
+    /** Called when the pager settles on [page]; the last page is the status page. */
     fun onPageSettled(page: Int) {
         val state = _uiState.value
-        state.content.getOrNull(page)?.let { markAsViewed(it) }
+        (state.pages.getOrNull(page) as? FeedPage.Card)?.let { markAsViewed(it.content) }
 
-        val nearEnd = page >= state.content.size - Constants.PREFETCH_THRESHOLD
+        val nearEnd = FeedLayout.cardsBefore(state.pages, page) >= state.content.size - Constants.PREFETCH_THRESHOLD
         // Do not auto-retry after a failure; the user retries from the status page.
         if (state.canGenerate && nearEnd && state.generation == GenerationStatus.Idle) {
             generateMore()
@@ -165,6 +182,10 @@ class ContentPagerViewModel @Inject constructor(
     }
 
     fun answer(content: GeneratedContent, optionIndex: Int?) {
+        if (optionIndex != null && !content.isAnswered && comboCounted.add(content.id)) {
+            val correct = optionIndex == content.correctIndex
+            _uiState.update { it.copy(combo = if (correct) it.combo + 1 else 0) }
+        }
         viewModelScope.launch {
             runCatching { contentRepository.setUserAnswer(content.id, optionIndex) }
         }

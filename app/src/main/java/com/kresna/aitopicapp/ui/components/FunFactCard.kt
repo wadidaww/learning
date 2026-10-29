@@ -1,125 +1,71 @@
 package com.kresna.aitopicapp.ui.components
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kresna.aitopicapp.domain.model.GeneratedContent
+import com.kresna.aitopicapp.ui.theme.CardStyle
 
+/** A fun fact shown as a "Spark": one surprising idea, big and clear. */
 @Composable
 fun FunFactCard(
     content: GeneratedContent,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
-    ContentCardWrapper(modifier = modifier) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Fun Fact",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "\uD83E\uDD2F",
-                    fontSize = 48.sp
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = content.answer ?: "",
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                if (content.codeSnippet != null) {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    CodeBlock(
-                        code = content.codeSnippet,
-                        language = content.codeLanguage
-                    )
-                }
-
-                if (content.explanation != null) {
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = "\u2014 ${content.explanation}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Light,
-                        fontStyle = FontStyle.Italic
-                    )
-                }
-            }
-
-            IconButton(
-                onClick = { copyContentToClipboard(context, content) },
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ContentCopy,
-                    contentDescription = "Copy",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+    // Previews and screenshot tests render a single frame, so start them at the final size.
+    val inspection = LocalInspectionMode.current
+    val emojiScale = remember(content.id) { Animatable(if (inspection) 1f else 0.4f) }
+    LaunchedEffect(content.id) {
+        emojiScale.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessLow))
     }
-}
 
-private fun copyContentToClipboard(context: Context, content: GeneratedContent) {
-    val text = buildString {
-        appendLine("Fun Fact:")
-        appendLine(content.answer ?: "")
-        if (content.explanation != null) {
-            appendLine()
-            appendLine(content.explanation)
-        }
+    val style = CardStyle.Spark
+    FeedCard(style = style, modifier = modifier) {
+        IconBadge(
+            icon = Icons.Rounded.Lightbulb,
+            tint = style.accent,
+            modifier = Modifier.scale(emojiScale.value)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Did you know?",
+            style = MaterialTheme.typography.titleLarge,
+            color = style.accent
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = content.answer.orEmpty(),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
         if (content.codeSnippet != null) {
-            appendLine()
-            appendLine("Code (${content.codeLanguage ?: "snippet"}):")
-            appendLine(content.codeSnippet)
+            Spacer(modifier = Modifier.height(20.dp))
+            CodeBlock(code = content.codeSnippet, language = content.codeLanguage)
+        }
+
+        if (content.explanation != null) {
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "— ${content.explanation}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontStyle = FontStyle.Italic,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("Fun Fact Content", text.trim())
-    clipboard.setPrimaryClip(clip)
-    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
 }

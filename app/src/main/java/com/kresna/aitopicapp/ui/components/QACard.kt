@@ -1,27 +1,18 @@
 package com.kresna.aitopicapp.ui.components
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,118 +22,98 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kresna.aitopicapp.domain.model.GeneratedContent
+import com.kresna.aitopicapp.ui.theme.CardStyle
 
+/**
+ * Q&A shown as a flashcard: the user tries to recall the answer first (retrieval practice),
+ * then taps to flip the card.
+ */
 @Composable
 fun QACard(
     content: GeneratedContent,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initiallyFlipped: Boolean = false
 ) {
-    var isAnswerVisible by remember(content.id) { mutableStateOf(false) }
-    val context = LocalContext.current
+    var isFlipped by remember(content.id) { mutableStateOf(initiallyFlipped) }
+    val rotation by animateFloatAsState(
+        targetValue = if (isFlipped) 180f else 0f,
+        animationSpec = tween(durationMillis = 450),
+        label = "flashcardFlip"
+    )
+    val haptics = rememberFeedHaptics()
+    val style = CardStyle.Flashcard
+    val shape = RoundedCornerShape(24.dp)
 
-    ContentCardWrapper(modifier = modifier) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    text = "Question & Answer",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
+    FeedCard(style = style, modifier = modifier) {
+        Text(
+            text = if (isFlipped) "Did you get it?" else "Think of the answer, then tap the card",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 280.dp)
+                .graphicsLayer {
+                    rotationY = rotation
+                    cameraDistance = 14f * density
+                }
+                .clip(shape)
+                .background(
+                    Brush.linearGradient(
+                        listOf(style.accent.copy(alpha = 0.14f), style.accentEnd.copy(alpha = 0.06f))
+                    )
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
+                .border(1.dp, style.accent.copy(alpha = 0.45f), shape)
+                .clickable(
+                    onClickLabel = if (isFlipped) "Show question" else "Reveal answer",
+                    role = Role.Button
+                ) {
+                    haptics.tap()
+                    isFlipped = !isFlipped
+                }
+                .padding(24.dp)
+        ) {
+            if (rotation <= 90f) {
                 Text(
                     text = content.question,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                if (!isAnswerVisible) {
-                    Button(
-                        onClick = { isAnswerVisible = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(text = "Reveal Answer")
-                    }
-                }
-
-                AnimatedVisibility(
-                    visible = isAnswerVisible,
-                    enter = fadeIn()
-                ) {
-                    androidx.compose.material3.Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Answer",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = content.answer ?: "",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-
-                            if (content.codeSnippet != null) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                CodeBlock(
-                                    code = content.codeSnippet,
-                                    language = content.codeLanguage
-                                )
-                            }
-                        }
+            } else {
+                // Counter-rotate the back face so its text is not mirrored.
+                Column(modifier = Modifier.graphicsLayer { rotationY = 180f }) {
+                    Text(
+                        text = content.answer.orEmpty(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    if (content.codeSnippet != null) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        CodeBlock(code = content.codeSnippet, language = content.codeLanguage)
                     }
                 }
             }
+        }
 
-            IconButton(
-                onClick = { copyContentToClipboard(context, content) },
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ContentCopy,
-                    contentDescription = "Copy",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        if (isFlipped) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = content.question,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
-}
-
-private fun copyContentToClipboard(context: Context, content: GeneratedContent) {
-    val text = buildString {
-        appendLine(content.question)
-        appendLine()
-        appendLine("Answer: ${content.answer ?: ""}")
-        if (content.codeSnippet != null) {
-            appendLine()
-            appendLine("Code (${content.codeLanguage ?: "snippet"}):")
-            appendLine(content.codeSnippet)
-        }
-    }
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("QA Content", text.trim())
-    clipboard.setPrimaryClip(clip)
-    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
 }
