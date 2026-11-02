@@ -1,15 +1,16 @@
 package com.kresna.aitopicapp.ui.theme
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Quiz
-import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.domain.model.ContentType
 
 /**
@@ -18,7 +19,8 @@ import com.kresna.aitopicapp.domain.model.ContentType
  * reading, answering or recalling.
  */
 data class CardStyle(
-    val label: String,
+    /** Pill label; 0 for no pill. */
+    @StringRes val labelRes: Int,
     val icon: ImageVector,
     private val start: (AppPalette) -> Color,
     private val end: (AppPalette) -> Color
@@ -32,12 +34,11 @@ data class CardStyle(
         @Composable get() = end(AppTheme.palette)
 
     companion object {
-        val Spark = CardStyle("SPARK", Icons.Rounded.AutoAwesome, { it.violet }, { it.pink })
-        val Quiz = CardStyle("QUICK QUIZ", Icons.Rounded.Quiz, { it.blue }, { it.cyan })
-        val Flashcard = CardStyle("FLASHCARD", Icons.Rounded.Style, { it.teal }, { it.sky })
-        val Review = CardStyle("REVIEW", Icons.Rounded.Replay, { it.amber }, { it.orange })
-        val Summary = CardStyle("RUN COMPLETE", Icons.Rounded.EmojiEvents, { it.violet }, { it.teal })
-        val Neutral = CardStyle("", Icons.Rounded.Layers, { it.sky }, { it.violet })
+        val Spark = CardStyle(R.string.card_type_spark, Icons.Rounded.AutoAwesome, { it.violet }, { it.pink })
+        val Quiz = CardStyle(R.string.card_type_quiz, Icons.Rounded.Quiz, { it.blue }, { it.cyan })
+        val Flashcard = CardStyle(R.string.card_type_flashcard, Icons.Rounded.Style, { it.teal }, { it.sky })
+        val Summary = CardStyle(R.string.card_type_summary, Icons.Rounded.EmojiEvents, { it.violet }, { it.teal })
+        val Neutral = CardStyle(0, Icons.Rounded.Layers, { it.sky }, { it.violet })
 
         fun forType(type: ContentType): CardStyle = when (type) {
             ContentType.MCQ -> Quiz

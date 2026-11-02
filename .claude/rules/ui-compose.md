@@ -20,6 +20,7 @@ paths:
 
 ## State keyed to data, not position
 - In `HorizontalPager` / `LazyColumn`, pass a stable `key` (content id) and use `remember(content.id) { … }` / `rememberSaveable` for per-item state (selected option, revealed answer).
+- Exception: the learning feed's `VerticalPager` has no keys on purpose, so that when a batch arrives while the user sits on the status page the first new card takes its place. Its cards key all per-item state by `content.id` instead, so page reuse is safe.
 - Do not build `Flow`s inside composables without `remember(key)`; a new flow each recomposition resubscribes.
 
 ## Discoverability
@@ -27,8 +28,8 @@ paths:
 - Counters scale: use "3 / 42" text instead of one dot per page when the count can exceed ~8.
 
 ## Consistency
-- Colors from `MaterialTheme.colorScheme`; success/error accents from `ui/theme/Color.kt`. Check dark mode.
+- Colors from `MaterialTheme.colorScheme`; accents (success, error, card types) from `AppTheme.palette`. The app follows the system theme, so check both light and dark.
 - Icon buttons need a specific `contentDescription` ("Copy question", not "Copy"); decorative emoji/icons use `contentDescription = null` / `Modifier.clearAndSetSemantics {}`.
 - Touch targets ≥ 48dp. Don't overlay icon buttons on top of text content.
 - Pluralize counts correctly ("1 item", "2 items").
-- New user-visible strings go to `res/values/strings.xml` when touching a screen (the codebase is migrating off hardcoded strings).
+- New user-visible strings go to `res/values/strings.xml` (`stringResource(R.string.…)`); the feed components are done, older screens still hard-code and are migrated as they are touched.

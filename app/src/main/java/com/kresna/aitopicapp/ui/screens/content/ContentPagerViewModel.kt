@@ -42,8 +42,6 @@ data class ContentPagerUiState(
     val startPage: Int? = null,
     val startPageConsumed: Boolean = false,
     val generation: GenerationStatus = GenerationStatus.Idle,
-    /** Number of items added since the screen was opened, to show a "new" hint. */
-    val newItemsCount: Int = 0,
     /** Feed pages: cards, run summaries and the trailing status page. */
     val pages: List<FeedPage> = emptyList(),
     /** Consecutive correct quiz answers in this session. */
@@ -87,23 +85,21 @@ class ContentPagerViewModel @Inject constructor(
     }
 
     private suspend fun observeContent() {
-        var initialCount = -1
+        var isFirstEmission = true
         contentFlow().collect { list ->
-            val isFirstEmission = initialCount < 0
-            if (isFirstEmission) initialCount = list.size
             _uiState.update { state ->
                 state.copy(
                     isLoading = false,
                     content = list,
                     pages = FeedLayout.build(list, withRunSummaries = state.hasRuns, withStatusPage = state.canGenerate),
                     startPage = if (isFirstEmission && list.isNotEmpty()) startPageFor(list) else state.startPage,
-                    startPageConsumed = state.startPageConsumed || (isFirstEmission && list.isEmpty()),
-                    newItemsCount = (list.size - initialCount).coerceAtLeast(0)
+                    startPageConsumed = state.startPageConsumed || (isFirstEmission && list.isEmpty())
                 )
             }
             if (isFirstEmission && list.isEmpty() && filter == ContentFilter.ALL) {
                 generateMore()
             }
+            isFirstEmission = false
         }
     }
 
@@ -122,7 +118,7 @@ class ContentPagerViewModel @Inject constructor(
 
     private fun startPageFor(list: List<GeneratedContent>): Int =
         if (filter == ContentFilter.ALL) {
-            FeedLayout.pageOf(LearningPosition.startIndex(list), withRunSummaries = true)
+            FeedLayout.pageOf(LearningPosition.startIndex(list), withRunSummaries = _uiState.value.hasRuns)
         } else {
             0
         }

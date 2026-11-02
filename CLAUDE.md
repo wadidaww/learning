@@ -72,18 +72,13 @@ timestamp prefix from each line and base64-decode the lines between the markers.
 - Keep `PromptBuilder` (what we ask for) and `ContentParser` (what we accept) in sync — they are one contract.
 - Room schema changes require a version bump **and** a `Migration` added in `AppDatabase` + registered in `DatabaseModule`. `fallbackToDestructiveMigration()` is on, so a forgotten migration silently wipes user data.
 
-## Known pitfalls (verified on `main` as of 2026-10-23)
+## Known pitfalls
 
-Open PR #1 (`claude/sleepy-carson-2gnu2r`) rewrites the parser, dedup, pager ordering and
-topic deletion and addresses most of these. Once it merges, re-check this list and delete
-the entries it fixed.
+The parser, dedup, pager ordering and topic deletion bugs listed here before PR #1 merged are fixed on `main` (verified 2026-11-02). Things that still bite:
 
-- `ContentParser` uses `jsonObject.get("x")?.asString`; an explicit JSON `null` is a `JsonNull`, and `asString` on it throws, failing the whole batch.
-- `ContentParser.parseJsonArray` returns `Result.success(emptyList())` on malformed JSON, so parse failures look like "no new content".
-- Fun facts all use `question = "Did you know?"`; the duplicate filter in `ContentRepositoryImpl` compares on `question`, so after the first fun-fact batch every new fun fact is dropped.
-- The content DAO orders by `createdAt DESC`; when a prefetch inserts rows, the pager list is re-emitted newest-first and the current page shifts. Card state (`remember { }` in `MCQCard`/`QACard`) is keyed by page index, not content id.
-- `generated_content` has no foreign key to `topics`; deleting a topic orphans its content.
-- `HomeViewModel` sets `Success(emptyList())` before Room's first emission, so "No topics yet" flashes on launch.
+- Compose code can't be compiled in the cloud; a change that only "looks right" needs CI (and ideally a Paparazzi snapshot) before it is called done.
+- `FeedLayout.build` and `FeedLayout.pageOf` must stay consistent: a card's page index is `contentIndex + contentIndex / FEED_RUN_SIZE` only while every full run is followed by exactly one summary page.
+- Quiz options from the model may carry "A. " prefixes; show them through `OptionText.stripEnumerators` (card, clipboard and share all do) so they agree.
 
 ## Debugging
 

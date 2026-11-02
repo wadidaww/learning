@@ -47,15 +47,15 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     primary = DayPalette.violet,
-    onPrimary = Color.White,
+    onPrimary = Day1,
     primaryContainer = Color(0xFFE7E0FA),
     onPrimaryContainer = Color(0xFF2A1A66),
     secondary = DayPalette.teal,
-    onSecondary = Color.White,
+    onSecondary = Day1,
     secondaryContainer = Color(0xFFD3EFE8),
     onSecondaryContainer = Color(0xFF0B3A31),
     tertiary = DayPalette.pink,
-    onTertiary = Color.White,
+    onTertiary = Day1,
     tertiaryContainer = Color(0xFFF7DCE8),
     onTertiaryContainer = Color(0xFF4A1530),
     background = Day0,
@@ -72,7 +72,7 @@ private val LightColorScheme = lightColorScheme(
     outline = DayOutline,
     outlineVariant = Day3,
     error = DayPalette.error,
-    onError = Color.White
+    onError = Day1
 )
 
 private val LocalAppPalette = staticCompositionLocalOf { NightPalette }

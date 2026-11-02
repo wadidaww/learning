@@ -46,13 +46,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kresna.aitopicapp.ui.theme.CardStyle
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.ui.theme.AppTheme
+import com.kresna.aitopicapp.ui.theme.CardStyle
 
 /** Where the user is in the feed, for the header's progress display. */
 sealed interface FeedProgress {
@@ -87,7 +89,7 @@ fun FeedHeader(
                     contentColor = MaterialTheme.colorScheme.onBackground
                 )
             ) {
-                Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.feed_back))
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -105,12 +107,15 @@ fun FeedHeader(
                     maxLines = 1
                 )
             }
+            // Keep the last real value while the chip animates out, so it never reads "x0".
+            val shownCombo = remember { intArrayOf(combo) }
+            if (combo > 0) shownCombo[0] = combo
             AnimatedVisibility(
                 visible = showCombo,
                 enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)) + fadeIn(),
                 exit = scaleOut() + fadeOut()
             ) {
-                ComboChip(combo = combo)
+                ComboChip(combo = shownCombo[0])
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -118,7 +123,7 @@ fun FeedHeader(
         when (progress) {
             is FeedProgress.Run -> RunProgressBar(progress = progress, accent = accent)
             is FeedProgress.Count -> Text(
-                text = "${progress.position} / ${progress.count}",
+                text = stringResource(R.string.feed_count_progress, progress.position, progress.count),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 12.dp)
@@ -131,14 +136,13 @@ fun FeedHeader(
 /** Stories-style bar: one segment per card of the current run. */
 @Composable
 private fun RunProgressBar(progress: FeedProgress.Run, accent: CardStyle) {
+    val description = stringResource(R.string.feed_run_progress, progress.runNumber, progress.filled, progress.total)
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            .semantics(mergeDescendants = true) {
-                contentDescription = "Run ${progress.runNumber}: ${progress.filled} of ${progress.total} cards"
-            }
+            .semantics(mergeDescendants = true) { contentDescription = description }
     ) {
         repeat(progress.total) { index ->
             val color by animateColorAsState(
@@ -165,6 +169,7 @@ private fun ComboChip(combo: Int) {
         bounce.animateTo(1f, spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessMedium))
     }
     val amber = AppTheme.palette.amber
+    val description = stringResource(R.string.feed_combo_description, combo)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -172,11 +177,11 @@ private fun ComboChip(combo: Int) {
             .clip(RoundedCornerShape(50))
             .background(amber.copy(alpha = 0.16f))
             .padding(start = 8.dp, end = 12.dp, top = 5.dp, bottom = 5.dp)
-            .semantics(mergeDescendants = true) { contentDescription = "$combo correct in a row" }
+            .semantics(mergeDescendants = true) { contentDescription = description }
     ) {
         Icon(Icons.Rounded.LocalFireDepartment, contentDescription = null, tint = amber, modifier = Modifier.size(18.dp))
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text = "x$combo", style = MaterialTheme.typography.labelLarge, color = amber)
+        Text(text = stringResource(R.string.feed_combo, combo), style = MaterialTheme.typography.labelLarge, color = amber)
     }
 }
 
@@ -234,16 +239,31 @@ fun FeedActionRail(
     ) {
         RailAction(
             icon = if (isBookmarked) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
-            label = if (isBookmarked) "Saved" else "Save",
-            contentDescription = if (isBookmarked) "Remove from saved cards" else "Save card for review",
+            label = stringResource(if (isBookmarked) R.string.feed_action_saved else R.string.feed_action_save),
+            contentDescription = stringResource(if (isBookmarked) R.string.feed_action_unsave_description else R.string.feed_action_save_description),
             tint = if (isBookmarked) AppTheme.palette.saved else MaterialTheme.colorScheme.onBackground,
             onClick = {
                 haptics.tap()
                 onToggleBookmark()
             }
         )
-        RailAction(icon = Icons.Rounded.Share, label = "Share", contentDescription = "Share card", onClick = onShare)
-        RailAction(icon = Icons.Rounded.ContentCopy, label = "Copy", contentDescription = "Copy card text", onClick = onCopy)
-        RailAction(icon = Icons.Rounded.BarChart, label = "Stats", contentDescription = "Topic progress", onClick = onStats)
+        RailAction(
+            icon = Icons.Rounded.Share,
+            label = stringResource(R.string.feed_action_share),
+            contentDescription = stringResource(R.string.feed_action_share_description),
+            onClick = onShare
+        )
+        RailAction(
+            icon = Icons.Rounded.ContentCopy,
+            label = stringResource(R.string.feed_action_copy),
+            contentDescription = stringResource(R.string.feed_action_copy_description),
+            onClick = onCopy
+        )
+        RailAction(
+            icon = Icons.Rounded.BarChart,
+            label = stringResource(R.string.feed_action_stats),
+            contentDescription = stringResource(R.string.feed_action_stats_description),
+            onClick = onStats
+        )
     }
 }

@@ -21,7 +21,6 @@ object ContentParser {
 
     private val THINK_BLOCK = Regex("(?s)<think>.*?</think>")
     private val CODE_FENCE = Regex("(?s)```[a-zA-Z0-9_-]*\\s*\\n?(.*?)```")
-    private val OPTION_PREFIX = Regex("^\\(?[A-Ha-h1-8][.):]\\s+")
     private val ARRAY_KEYS = listOf("items", "content", "questions", "facts", "data", "results")
 
     fun parse(responseText: String, requestedType: ContentType, topicId: Long): List<GeneratedContent> {
@@ -214,18 +213,16 @@ object ContentParser {
             return index.takeIf { it in options.indices }
         }
         // "B. Quick Sort" or "(B) Quick Sort"
-        OPTION_PREFIX.find(asText)?.let { prefix ->
-            val letter = prefix.value.firstOrNull { it.isLetter() }
+        if (OptionText.hasEnumerator(asText)) {
+            val letter = asText.firstOrNull { it.isLetter() }
             val index = letter?.let { it.uppercaseChar() - 'A' }
             if (index != null && index in options.indices) return index
         }
         // "Quick Sort"
-        val normalizedAnswer = stripOptionPrefix(asText).lowercase()
-        return options.indexOfFirst { stripOptionPrefix(it).lowercase() == normalizedAnswer }
+        val normalizedAnswer = OptionText.stripEnumerator(asText).lowercase()
+        return options.indexOfFirst { OptionText.stripEnumerator(it).lowercase() == normalizedAnswer }
             .takeIf { it >= 0 }
     }
-
-    private fun stripOptionPrefix(option: String): String = OPTION_PREFIX.replace(option.trim(), "")
 
     private fun JsonObject.string(vararg keys: String): String? {
         for (key in keys) {

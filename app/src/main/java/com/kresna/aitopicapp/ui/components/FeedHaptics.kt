@@ -15,8 +15,6 @@ class FeedHaptics(private val view: View) {
 
     fun tap() = perform(HapticFeedbackConstants.KEYBOARD_TAP)
 
-    fun celebrate() = perform(HapticFeedbackConstants.LONG_PRESS)
-
     private fun perform(constant: Int) {
         view.performHapticFeedback(constant)
     }

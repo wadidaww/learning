@@ -50,18 +50,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.domain.model.GeneratedContent
 import com.kresna.aitopicapp.ui.theme.CardStyle
 import com.kresna.aitopicapp.ui.theme.AppTheme
+import com.kresna.aitopicapp.util.OptionText
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-
-/** "A. ", "(b) ", "3) " prefixes the AI sometimes puts on options; the card shows its own letter badge. */
-private val OPTION_PREFIX = Regex("^\\(?[A-Ha-h1-8][.):]\\s+")
 
 @Composable
 fun MCQCard(
@@ -80,6 +80,8 @@ fun MCQCard(
     val scope = rememberCoroutineScope()
     val shake = remember(content.id) { Animatable(0f) }
     val style = CardStyle.Quiz
+    // The card shows its own letter badges, so the model's "A. " prefixes are dropped.
+    val options = remember(content.id) { OptionText.stripEnumerators(content.options.orEmpty()) }
 
     FeedCard(style = style, modifier = modifier) {
         Text(
@@ -99,10 +101,10 @@ fun MCQCard(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.offset { IntOffset(shake.value.roundToInt(), 0) }
         ) {
-            content.options?.forEachIndexed { index, option ->
+            options.forEachIndexed { index, option ->
                 OptionButton(
                     letter = 'A' + index,
-                    text = OPTION_PREFIX.replace(option.trim(), ""),
+                    text = option,
                     state = when {
                         !isRevealed -> OptionState.Idle
                         index == content.correctIndex -> OptionState.Correct
@@ -220,8 +222,8 @@ private fun OptionButton(
                 )
         ) {
             when (state) {
-                OptionState.Correct -> Icon(Icons.Rounded.Check, contentDescription = "Correct answer", tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
-                OptionState.Wrong -> Icon(Icons.Rounded.Close, contentDescription = "Your answer, incorrect", tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
+                OptionState.Correct -> Icon(Icons.Rounded.Check, contentDescription = stringResource(R.string.quiz_correct_answer), tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
+                OptionState.Wrong -> Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.quiz_your_wrong_answer), tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
                 else -> Text(text = letter.toString(), style = MaterialTheme.typography.labelLarge, color = accent)
             }
         }
@@ -258,13 +260,17 @@ private fun FeedbackBanner(isCorrect: Boolean, correctLetter: Char?, onReset: ()
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (isCorrect) "Nailed it!" else "Not quite" + (correctLetter?.let { ". It's $it." } ?: "."),
+                text = when {
+                    isCorrect -> stringResource(R.string.quiz_nailed_it)
+                    correctLetter != null -> stringResource(R.string.quiz_not_quite_with_answer, correctLetter.toString())
+                    else -> stringResource(R.string.quiz_not_quite)
+                },
                 style = MaterialTheme.typography.titleLarge,
                 color = color
             )
         }
         TextButton(onClick = onReset) {
-            Text("Try again")
+            Text(stringResource(R.string.quiz_try_again))
         }
     }
 }

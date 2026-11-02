@@ -34,6 +34,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kresna.aitopicapp.ui.theme.AppTheme
@@ -54,7 +55,7 @@ private val FeedHeaderHeight = 72.dp
 fun FeedCard(
     style: CardStyle,
     modifier: Modifier = Modifier,
-    label: String = style.label,
+    label: String = if (style.labelRes != 0) stringResource(style.labelRes) else "",
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -124,7 +125,7 @@ fun TypePill(text: String, style: CardStyle, modifier: Modifier = Modifier) {
     ) {
         Icon(imageVector = style.icon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
         Spacer(modifier = Modifier.width(6.dp))
-        Text(text = text, style = MaterialTheme.typography.labelSmall, color = accent)
+        Text(text = text.uppercase(), style = MaterialTheme.typography.labelSmall, color = accent)
     }
 }
 

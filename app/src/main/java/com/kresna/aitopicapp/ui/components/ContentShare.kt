@@ -1,11 +1,14 @@
 package com.kresna.aitopicapp.ui.components
 
+import android.content.Context
 import android.content.Intent
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.domain.model.GeneratedContent
+import com.kresna.aitopicapp.util.OptionText
 
 /** Opens the system share sheet with a card as plain text. */
-fun shareContent(content: GeneratedContent, context: android.content.Context) {
+fun shareContent(content: GeneratedContent, context: Context) {
     val shareText = buildShareText(content)
 
     val intent = Intent(Intent.ACTION_SEND).apply {
@@ -15,7 +18,7 @@ fun shareContent(content: GeneratedContent, context: android.content.Context) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
-    context.startActivity(Intent.createChooser(intent, "Share via"))
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_via)))
 }
 
 private fun buildShareText(content: GeneratedContent): String {
@@ -25,10 +28,16 @@ private fun buildShareText(content: GeneratedContent): String {
             appendLine()
             appendLine("❓ ${content.question}")
             appendLine()
-            content.options?.forEach { option ->
-                appendLine("• $option")
+            val options = OptionText.stripEnumerators(content.options.orEmpty())
+            options.forEachIndexed { index, option ->
+                appendLine("${'A' + index}. $option")
             }
             appendLine()
+            val correctIndex = content.correctIndex
+            val answer = correctIndex?.let { options.getOrNull(it) }
+            if (correctIndex != null && answer != null) {
+                appendLine("✅ Answer: ${'A' + correctIndex}. $answer")
+            }
             if (content.explanation != null) {
                 appendLine("💡 ${content.explanation}")
             }

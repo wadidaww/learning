@@ -27,9 +27,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.domain.model.ContentFilter
 import com.kresna.aitopicapp.domain.model.ContentType
 import com.kresna.aitopicapp.domain.model.GeneratedContent
@@ -90,16 +92,16 @@ fun ContentPagerScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         when {
-            state.isLoading -> CenteredMessage(showProgress = true, title = "Loading your cards...")
+            state.isLoading -> CenteredMessage(showProgress = true, title = stringResource(R.string.feed_loading))
 
             pages.isEmpty() -> CenteredMessage(
-                title = if (state.filter == ContentFilter.BOOKMARKED) "No saved cards yet" else "No missed questions",
-                body = if (state.filter == ContentFilter.BOOKMARKED) {
-                    "Tap Save on any card to keep it for review."
-                } else {
-                    "Quiz questions you get wrong show up here so you can practise them again."
-                },
-                actionLabel = "Go back",
+                title = stringResource(
+                    if (state.filter == ContentFilter.BOOKMARKED) R.string.feed_empty_saved_title else R.string.feed_empty_missed_title
+                ),
+                body = stringResource(
+                    if (state.filter == ContentFilter.BOOKMARKED) R.string.feed_empty_saved_body else R.string.feed_empty_missed_body
+                ),
+                actionLabel = stringResource(R.string.feed_go_back),
                 onAction = onBackClick
             )
 
@@ -132,7 +134,7 @@ fun ContentPagerScreen(
                 val currentContent = (currentPage as? FeedPage.Card)?.content
 
                 FeedHeader(
-                    title = state.topicName.ifBlank { "Learning" },
+                    title = state.topicName.ifBlank { stringResource(R.string.feed_default_title) },
                     subtitle = modeLabel(state.contentType, state.filter),
                     progress = progressFor(state, currentPage, pagerState.currentPage),
                     combo = state.combo,
@@ -206,10 +208,11 @@ private fun progressFor(state: ContentPagerUiState, page: FeedPage?, pageIndex: 
     }
 }
 
+@Composable
 private fun modeLabel(contentType: ContentType, filter: ContentFilter): String = when (filter) {
-    ContentFilter.ALL -> if (contentType == ContentType.MIX) "Mixed feed" else contentType.displayName
-    ContentFilter.BOOKMARKED -> "Review: saved cards"
-    ContentFilter.MISSED -> "Review: missed questions"
+    ContentFilter.ALL -> if (contentType == ContentType.MIX) stringResource(R.string.feed_mode_mixed) else contentType.displayName
+    ContentFilter.BOOKMARKED -> stringResource(R.string.feed_mode_saved)
+    ContentFilter.MISSED -> stringResource(R.string.feed_mode_missed)
 }
 
 @Composable

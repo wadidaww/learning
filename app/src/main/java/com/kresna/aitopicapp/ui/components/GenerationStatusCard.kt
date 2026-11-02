@@ -15,8 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.ui.screens.content.GenerationStatus
 import com.kresna.aitopicapp.ui.theme.CardStyle
 
@@ -39,8 +41,8 @@ fun GenerationStatusCard(
                 CircularProgressIndicator(modifier = Modifier.size(48.dp))
                 Spacer(modifier = Modifier.height(20.dp))
                 StatusText(
-                    title = if (hasContent) "Cooking up your next cards..." else "Creating your first cards...",
-                    body = "New cards appear right here. This can take up to a minute."
+                    title = stringResource(if (hasContent) R.string.generation_running_more else R.string.generation_running_first),
+                    body = stringResource(R.string.generation_running_body)
                 )
             }
 
@@ -52,10 +54,10 @@ fun GenerationStatusCard(
                     modifier = Modifier.size(48.dp)
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                StatusText(title = "Couldn't make new cards", body = status.message)
+                StatusText(title = stringResource(R.string.generation_failed_title), body = status.message)
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(onClick = onGenerate, modifier = Modifier.fillMaxWidth()) {
-                    Text("Try again")
+                    Text(stringResource(R.string.generation_retry))
                 }
             }
 
@@ -68,12 +70,12 @@ fun GenerationStatusCard(
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 StatusText(
-                    title = "You're all caught up",
-                    body = "Get a fresh set of cards to keep going."
+                    title = stringResource(R.string.generation_idle_title),
+                    body = stringResource(R.string.generation_idle_body)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(onClick = onGenerate, modifier = Modifier.fillMaxWidth()) {
-                    Text("Get more cards")
+                    Text(stringResource(R.string.generation_get_more))
                 }
             }
         }

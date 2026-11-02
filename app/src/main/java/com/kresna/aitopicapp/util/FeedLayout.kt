@@ -64,7 +64,7 @@ object FeedLayout {
 
     /** Number of content cards on pages before [page], used to decide when to prefetch. */
     fun cardsBefore(pages: List<FeedPage>, page: Int): Int =
-        pages.take(page.coerceIn(0, pages.size)).count { it is FeedPage.Card }
+        pages.asSequence().take(page.coerceAtLeast(0)).count { it is FeedPage.Card }
 
     fun runStats(runIndex: Int, run: List<GeneratedContent>): RunStats {
         var best = 0

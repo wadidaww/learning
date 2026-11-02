@@ -36,8 +36,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.ui.theme.AppTheme
 import com.kresna.aitopicapp.ui.theme.CardStyle
 import com.kresna.aitopicapp.util.RunStats
@@ -56,10 +58,10 @@ fun RunSummaryCard(
     val accuracy = stats.accuracyPercent
     val palette = AppTheme.palette
     val (icon, tint, headline) = when {
-        accuracy == null -> Triple(Icons.Rounded.Flag, palette.violet, "Run complete!")
-        accuracy >= 80 -> Triple(Icons.Rounded.EmojiEvents, palette.amber, "Brilliant run!")
-        accuracy >= 50 -> Triple(Icons.AutoMirrored.Rounded.TrendingUp, palette.teal, "Solid run!")
-        else -> Triple(Icons.Rounded.Eco, palette.teal, "Good effort, it'll stick next time")
+        accuracy == null -> Triple(Icons.Rounded.Flag, palette.violet, R.string.run_complete)
+        accuracy >= 80 -> Triple(Icons.Rounded.EmojiEvents, palette.amber, R.string.run_brilliant)
+        accuracy >= 50 -> Triple(Icons.AutoMirrored.Rounded.TrendingUp, palette.teal, R.string.run_solid)
+        else -> Triple(Icons.Rounded.Eco, palette.teal, R.string.run_good_effort)
     }
     val inspection = LocalInspectionMode.current
     val pop = remember(stats.runNumber) { Animatable(if (inspection) 1f else 0.3f) }
@@ -69,14 +71,14 @@ fun RunSummaryCard(
 
     FeedCard(
         style = CardStyle.Summary,
-        label = "RUN ${stats.runNumber} COMPLETE",
+        label = stringResource(R.string.card_type_run_complete, stats.runNumber),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
         IconBadge(icon = icon, tint = tint, size = 88.dp, modifier = Modifier.scale(pop.value))
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = headline,
+            text = stringResource(headline),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center
@@ -84,15 +86,15 @@ fun RunSummaryCard(
         Spacer(modifier = Modifier.height(24.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-            StatTile(value = "${stats.viewed}/${stats.cardCount}", label = "cards", modifier = Modifier.weight(1f))
+            StatTile(value = "${stats.viewed}/${stats.cardCount}", label = stringResource(R.string.run_stat_cards), modifier = Modifier.weight(1f))
             StatTile(
                 value = if (stats.answered == 0) "–" else "${stats.correct}/${stats.answered}",
-                label = "correct",
+                label = stringResource(R.string.run_stat_correct),
                 modifier = Modifier.weight(1f)
             )
             StatTile(
                 value = "${stats.bestStreak}",
-                label = "best streak",
+                label = stringResource(R.string.run_stat_best_streak),
                 icon = Icons.Rounded.LocalFireDepartment,
                 iconTint = palette.amber,
                 modifier = Modifier.weight(1f)
@@ -101,7 +103,7 @@ fun RunSummaryCard(
 
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Good place for a break. Ideas stick better when you come back to them later.",
+            text = stringResource(R.string.run_break_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -114,10 +116,10 @@ fun RunSummaryCard(
                 .fillMaxWidth()
                 .heightIn(min = 52.dp)
         ) {
-            Text("Keep going", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.run_keep_going), style = MaterialTheme.typography.labelLarge)
         }
         TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-            Text("Done for now")
+            Text(stringResource(R.string.run_done))
         }
     }
 }

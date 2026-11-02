@@ -25,9 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.domain.model.GeneratedContent
 import com.kresna.aitopicapp.ui.theme.CardStyle
 
@@ -53,7 +55,7 @@ fun QACard(
 
     FeedCard(style = style, modifier = modifier) {
         Text(
-            text = if (isFlipped) "Did you get it?" else "Think of the answer, then tap the card",
+            text = stringResource(if (isFlipped) R.string.flashcard_prompt_back else R.string.flashcard_prompt_front),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -76,7 +78,7 @@ fun QACard(
                 )
                 .border(1.dp, style.accent.copy(alpha = 0.45f), shape)
                 .clickable(
-                    onClickLabel = if (isFlipped) "Show question" else "Reveal answer",
+                    onClickLabel = stringResource(if (isFlipped) R.string.flashcard_show_question else R.string.flashcard_reveal),
                     role = Role.Button
                 ) {
                     haptics.tap()

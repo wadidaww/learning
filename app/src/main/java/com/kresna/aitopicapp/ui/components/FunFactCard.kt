@@ -15,8 +15,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import com.kresna.aitopicapp.R
 import com.kresna.aitopicapp.domain.model.GeneratedContent
 import com.kresna.aitopicapp.ui.theme.CardStyle
 
@@ -42,7 +44,7 @@ fun FunFactCard(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Did you know?",
+            text = stringResource(R.string.spark_title),
             style = MaterialTheme.typography.titleLarge,
             color = style.accent
         )
