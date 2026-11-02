@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    // Renders Compose UI to PNGs in JVM unit tests (screenshots without a device).
+    alias(libs.plugins.paparazzi)
 }
 
 android {

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-colour layer for Android 13+ themed icons. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="1.15"
+        android:scaleY="1.15">
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="6">
+            <!-- Card outline with the spark cut out (even-odd fill). -->
+            <path
+                android:fillColor="#FF000000"
+                android:fillType="evenOdd"
+                android:pathData="M42,42a6,6 0,0 1,6 -6h18a6,6 0,0 1,6 6v28a6,6 0,0 1,-6 6h-18a6,6 0,0 1,-6 -6zM57,45Q58.6,54.4 68,56Q58.6,57.6 57,67Q55.4,57.6 46,56Q55.4,54.4 57,45Z" />
+        </group>
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M74,29Q74.8,34.2 80,35Q74.8,35.8 74,41Q73.2,35.8 68,35Q73.2,34.2 74,29Z" />
+    </group>
+</vector>

@@ -1,4 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AI Topic Learning</string>
+
+    <!-- Card types (FeedCard pills) -->
+    <string name="card_type_spark">Spark</string>
+    <string name="card_type_quiz">Quick quiz</string>
+    <string name="card_type_flashcard">Flashcard</string>
+    <string name="card_type_summary">Run complete</string>
+    <string name="card_type_run_complete">Run %1$d complete</string>
+
+    <!-- Feed header and action rail -->
+    <string name="feed_back">Back</string>
+    <string name="feed_default_title">Learning</string>
+    <string name="feed_mode_mixed">Mixed feed</string>
+    <string name="feed_mode_saved">Review: saved cards</string>
+    <string name="feed_mode_missed">Review: missed questions</string>
+    <string name="feed_run_progress">Run %1$d: %2$d of %3$d cards</string>
+    <string name="feed_count_progress">%1$d / %2$d</string>
+    <string name="feed_combo">x%1$d</string>
+    <string name="feed_combo_description">%1$d correct in a row</string>
+    <string name="feed_action_save">Save</string>
+    <string name="feed_action_saved">Saved</string>
+    <string name="feed_action_save_description">Save card for review</string>
+    <string name="feed_action_unsave_description">Remove from saved cards</string>
+    <string name="feed_action_share">Share</string>
+    <string name="feed_action_share_description">Share card</string>
+    <string name="feed_action_copy">Copy</string>
+    <string name="feed_action_copy_description">Copy card text</string>
+    <string name="feed_action_stats">Stats</string>
+    <string name="feed_action_stats_description">Topic progress</string>
+
+    <!-- Feed screen states -->
+    <string name="feed_loading">Loading your cards…</string>
+    <string name="feed_empty_saved_title">No saved cards yet</string>
+    <string name="feed_empty_saved_body">Tap Save on any card to keep it for review.</string>
+    <string name="feed_empty_missed_title">No missed questions</string>
+    <string name="feed_empty_missed_body">Quiz questions you get wrong show up here so you can practise them again.</string>
+    <string name="feed_go_back">Go back</string>
+
+    <!-- Quiz card -->
+    <string name="quiz_correct_answer">Correct answer</string>
+    <string name="quiz_your_wrong_answer">Your answer, incorrect</string>
+    <string name="quiz_nailed_it">Nailed it!</string>
+    <string name="quiz_not_quite">Not quite.</string>
+    <string name="quiz_not_quite_with_answer">Not quite. It\'s %1$s.</string>
+    <string name="quiz_try_again">Try again</string>
+
+    <!-- Flashcard -->
+    <string name="flashcard_prompt_front">Think of the answer, then tap the card</string>
+    <string name="flashcard_prompt_back">Did you get it?</string>
+    <string name="flashcard_reveal">Reveal answer</string>
+    <string name="flashcard_show_question">Show question</string>
+
+    <!-- Spark card -->
+    <string name="spark_title">Did you know?</string>
+
+    <!-- Run summary -->
+    <string name="run_complete">Run complete!</string>
+    <string name="run_brilliant">Brilliant run!</string>
+    <string name="run_solid">Solid run!</string>
+    <string name="run_good_effort">Good effort, it\'ll stick next time</string>
+    <string name="run_stat_cards">cards</string>
+    <string name="run_stat_correct">correct</string>
+    <string name="run_stat_best_streak">best streak</string>
+    <string name="run_break_hint">Good place for a break. Ideas stick better when you come back to them later.</string>
+    <string name="run_keep_going">Keep going</string>
+    <string name="run_done">Done for now</string>
+
+    <!-- Generation status page -->
+    <string name="generation_running_first">Creating your first cards…</string>
+    <string name="generation_running_more">Cooking up your next cards…</string>
+    <string name="generation_running_body">New cards appear right here. This can take up to a minute.</string>
+    <string name="generation_failed_title">Couldn\'t make new cards</string>
+    <string name="generation_retry">Try again</string>
+    <string name="generation_idle_title">You\'re all caught up</string>
+    <string name="generation_idle_body">Get a fresh set of cards to keep going.</string>
+    <string name="generation_get_more">Get more cards</string>
+
+    <!-- Clipboard and share -->
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="clipboard_label">Learning card</string>
+    <string name="share_via">Share via</string>
+
+    <!-- Settings: model picker -->
+    <string name="settings_models_retiring">Retiring on %1$s</string>
+    <string name="settings_model_retiring">This model is retiring on %1$s. Switch before then to keep generating cards.</string>
+    <string name="settings_model_unknown">\"%1$s\" isn\'t in the ModelArk model list. If it is a custom endpoint, it will still be used.</string>
+    <string name="settings_model_not_in_region">This model isn\'t served in the selected region.</string>
+    <string name="settings_switch_to">Use %1$s</string>
+    <string name="settings_selected">Selected</string>
 </resources>

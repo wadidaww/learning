@@ -1,17 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- A stack of learning cards with a spark: swipeable cards that teach. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:translateX="22"
-        android:translateY="22">
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="1.15"
+        android:scaleY="1.15">
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="-12">
+            <path
+                android:fillColor="#7FD1C0"
+                android:fillAlpha="0.55"
+                android:pathData="M36,40a6,6 0,0 1,6 -6h18a6,6 0,0 1,6 6v28a6,6 0,0 1,-6 6h-18a6,6 0,0 1,-6 -6z" />
+        </group>
+        <group
+            android:pivotX="54"
+            android:pivotY="54"
+            android:rotation="6">
+            <path
+                android:fillColor="#F7F5F0"
+                android:pathData="M42,42a6,6 0,0 1,6 -6h18a6,6 0,0 1,6 6v28a6,6 0,0 1,-6 6h-18a6,6 0,0 1,-6 -6z" />
+            <path
+                android:fillColor="#6D55C9"
+                android:pathData="M57,45Q58.6,54.4 68,56Q58.6,57.6 57,67Q55.4,57.6 46,56Q55.4,54.4 57,45Z" />
+        </group>
         <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M32,8C18.745,8 8,18.745 8,32s10.745,24 24,24 24,-10.745 24,-24S45.255,8 32,8zM32,48c-8.837,0 -16,-7.163 -16,-16s7.163,-16 16,-16 16,7.163 16,16 -7.163,16 -16,16zM32,20c-6.627,0 -12,5.373 -12,12s5.373,12 12,12 12,-5.373 12,-12 -5.373,-12 -12,-12z" />
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M28,28h8v8h-8z" />
+            android:fillColor="#F2CF8B"
+            android:pathData="M74,29Q74.8,34.2 80,35Q74.8,35.8 74,41Q73.2,35.8 68,35Q73.2,34.2 74,29Z" />
     </group>
 </vector>

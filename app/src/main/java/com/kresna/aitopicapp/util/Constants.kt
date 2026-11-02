@@ -9,6 +9,12 @@ object Constants {
     /** Long items are shortened in the prompt to keep the request small. */
     const val EXISTING_QUESTION_MAX_CHARS = 140
 
+    /** Cards per feed run; a summary page follows each full run. */
+    const val FEED_RUN_SIZE = 10
+
+    /** Consecutive correct answers needed before the combo counter shows. */
+    const val COMBO_MIN_STREAK = 3
+
     /** Start generating the next batch when the user is this many pages away from the end. */
     const val PREFETCH_THRESHOLD = 3
 

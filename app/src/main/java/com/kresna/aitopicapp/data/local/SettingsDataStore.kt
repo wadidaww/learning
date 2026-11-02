@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.kresna.aitopicapp.domain.model.AiModelCatalog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -29,12 +30,13 @@ class SettingsDataStore @Inject constructor(
         preferences[API_KEY] ?: ""
     }
 
+    /** Stored ids are passed through [AiModelCatalog.resolve], so an outdated id is corrected on read. */
     val modelId: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[MODEL_ID] ?: "dola-seed-2-1-turbo-260628"
+        AiModelCatalog.resolve(preferences[MODEL_ID])
     }
 
     val region: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[REGION] ?: "ap-southeast-1"
+        preferences[REGION] ?: AiModelCatalog.DEFAULT_REGION_ID
     }
 
     suspend fun saveApiKey(apiKey: String) {
@@ -67,20 +69,16 @@ class SettingsDataStore @Inject constructor(
         val data = context.dataStore.data.first()
         return AppSettings(
             apiKey = data[API_KEY] ?: "",
-            modelId = data[MODEL_ID] ?: "dola-seed-2-1-turbo-260628",
-            region = data[REGION] ?: "ap-southeast-1"
+            modelId = AiModelCatalog.resolve(data[MODEL_ID]),
+            region = data[REGION] ?: AiModelCatalog.DEFAULT_REGION_ID
         )
     }
 }
 
 data class AppSettings(
     val apiKey: String = "",
-    val modelId: String = "dola-seed-2-1-turbo-260628",
-    val region: String = "ap-southeast-1"
+    val modelId: String = AiModelCatalog.DEFAULT_MODEL_ID,
+    val region: String = AiModelCatalog.DEFAULT_REGION_ID
 ) {
-    val baseUrl: String
-        get() = when (region) {
-            "eu-west-1" -> "https://ark.eu-west.bytepluses.com/api/v3/"
-            else -> "https://ark.ap-southeast.bytepluses.com/api/v3/"
-        }
+    val baseUrl: String get() = AiModelCatalog.region(region).baseUrl
 }

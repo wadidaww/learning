@@ -16,12 +16,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Replay
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Replay
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -126,7 +126,7 @@ fun TopicDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -135,23 +135,23 @@ fun TopicDetailScreen(
                     if (uiState is UiState.Success) {
                         IconButton(onClick = { showEditDialog = true }) {
                             Icon(
-                                imageVector = Icons.Default.Edit,
+                                imageVector = Icons.Rounded.Edit,
                                 contentDescription = "Edit Topic"
                             )
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                imageVector = Icons.Rounded.Delete,
                                 contentDescription = "Delete Topic"
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         },
@@ -237,7 +237,7 @@ fun TopicDetailScreen(
                                     onClick = { onOpenContent(ContentType.MCQ, ContentFilter.MISSED) },
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Icon(Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Rounded.Replay, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("Missed (${progress.missed})")
                                 }
@@ -247,7 +247,7 @@ fun TopicDetailScreen(
                                     onClick = { onOpenContent(ContentType.MIX, ContentFilter.BOOKMARKED) },
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Icon(Icons.Default.Bookmark, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Rounded.Bookmark, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("Saved (${progress.bookmarked})")
                                 }
@@ -370,7 +370,7 @@ fun TopicDetailScreen(
         ErrorDialog(
             title = "Generation Failed",
             message = error.message,
-            icon = Icons.Default.Warning,
+            icon = Icons.Rounded.Warning,
             onDismiss = { errorDialog = null },
             onRetry = if (error.isRetryable) {
                 {

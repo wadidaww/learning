@@ -42,6 +42,31 @@ jobs:
             app/build/test-results/
           if-no-files-found: ignore
 
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: app/build/reports/paparazzi/**/*.png
+          if-no-files-found: ignore
+
+      # Cloud Claude sessions cannot download artifacts, so print small JPEG copies of the
+      # Paparazzi screenshots as base64 between markers; the job log can be decoded back to images.
+      - name: Print screenshots for cloud review
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          shopt -s globstar nullglob
+          files=(app/build/reports/paparazzi/**/*.png)
+          [ ${#files[@]} -eq 0 ] && exit 0
+          command -v convert >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick >/dev/null; }
+          for f in "${files[@]}"; do
+            name=$(basename "$f" .png)
+            convert "$f" -quality 85 "/tmp/$name.jpg"
+            echo "=== SCREENSHOT-BEGIN $name.jpg"
+            base64 -w 1000 "/tmp/$name.jpg"
+            echo "=== SCREENSHOT-END $name.jpg"
+          done
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:

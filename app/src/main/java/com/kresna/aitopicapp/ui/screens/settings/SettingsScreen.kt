@@ -11,9 +11,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +43,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.kresna.aitopicapp.R
+import com.kresna.aitopicapp.domain.model.AiModel
+import com.kresna.aitopicapp.domain.model.AiModelCatalog
+import com.kresna.aitopicapp.ui.theme.AppTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 
@@ -78,15 +92,15 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         },
@@ -123,7 +137,7 @@ fun SettingsScreen(
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            imageVector = if (passwordVisible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                             contentDescription = if (passwordVisible) "Hide" else "Show"
                         )
                     }
@@ -141,16 +155,23 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val selectedModel = viewModel.findModel(selectedModelId)
+            val replacement = viewModel.suggestedReplacement(selectedModelId, selectedRegion)
+
             ExposedDropdownMenuBox(
                 expanded = modelExpanded,
                 onExpandedChange = { modelExpanded = it }
             ) {
-                val selectedModel = viewModel.availableModels.find { it.id == selectedModelId }
-
                 OutlinedTextField(
-                    value = selectedModel?.name ?: "",
+                    // An id we don't know (for example a custom endpoint) is shown as is.
+                    value = selectedModel?.name ?: selectedModelId,
                     onValueChange = {},
                     readOnly = true,
+                    supportingText = if (selectedModel != null) {
+                        { Text("${selectedModel.provider} · ${selectedModel.contextWindow} context · ${selectedModel.id}") }
+                    } else {
+                        null
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
@@ -161,28 +182,42 @@ fun SettingsScreen(
                     expanded = modelExpanded,
                     onDismissRequest = { modelExpanded = false }
                 ) {
-                    viewModel.availableModels.forEach { model ->
-                        DropdownMenuItem(
-                            text = {
-                                Column {
-                                    Text(
-                                        text = model.name,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                    Text(
-                                        text = model.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            },
-                            onClick = {
+                    viewModel.modelsForRegion(selectedRegion).forEach { model ->
+                        ModelMenuItem(model = model, selected = model.id == selectedModelId) {
+                            viewModel.updateModel(model.id)
+                            modelExpanded = false
+                        }
+                    }
+                    val retiring = viewModel.retiringModelsForRegion(selectedRegion)
+                    if (retiring.isNotEmpty()) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        Text(
+                            text = stringResource(R.string.settings_models_retiring, AiModelCatalog.RETIREMENT_DATE),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                        retiring.forEach { model ->
+                            ModelMenuItem(model = model, selected = model.id == selectedModelId) {
                                 viewModel.updateModel(model.id)
                                 modelExpanded = false
                             }
-                        )
+                        }
                     }
                 }
+            }
+
+            if (replacement != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                ModelNotice(
+                    message = when {
+                        selectedModel == null -> stringResource(R.string.settings_model_unknown, selectedModelId)
+                        selectedModel.isRetiring -> stringResource(R.string.settings_model_retiring, AiModelCatalog.RETIREMENT_DATE)
+                        else -> stringResource(R.string.settings_model_not_in_region)
+                    },
+                    actionLabel = stringResource(R.string.settings_switch_to, replacement.name),
+                    onAction = { viewModel.updateModel(replacement.id) }
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -270,6 +305,58 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun ModelMenuItem(model: AiModel, selected: Boolean, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = {
+            Column {
+                Text(
+                    text = model.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                )
+                Text(
+                    text = "${model.provider} · ${model.contextWindow} · ${model.description}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        trailingIcon = if (selected) {
+            { Icon(Icons.Rounded.Check, contentDescription = stringResource(R.string.settings_selected)) }
+        } else {
+            null
+        },
+        onClick = onClick
+    )
+}
+
+/** Soft warning under the model picker with a one-tap fix. */
+@Composable
+private fun ModelNotice(message: String, actionLabel: String, onAction: () -> Unit) {
+    val tint = AppTheme.palette.amber
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(tint.copy(alpha = 0.14f))
+            .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
+    ) {
+        Icon(Icons.Rounded.Warning, contentDescription = null, tint = tint)
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        TextButton(onClick = onAction) {
+            Text(actionLabel)
         }
     }
 }
