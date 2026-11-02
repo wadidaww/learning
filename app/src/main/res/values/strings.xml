@@ -81,4 +81,12 @@
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="clipboard_label">Learning card</string>
     <string name="share_via">Share via</string>
+
+    <!-- Settings: model picker -->
+    <string name="settings_models_retiring">Retiring on %1$s</string>
+    <string name="settings_model_retiring">This model is retiring on %1$s. Switch before then to keep generating cards.</string>
+    <string name="settings_model_unknown">\"%1$s\" isn\'t in the ModelArk model list. If it is a custom endpoint, it will still be used.</string>
+    <string name="settings_model_not_in_region">This model isn\'t served in the selected region.</string>
+    <string name="settings_switch_to">Use %1$s</string>
+    <string name="settings_selected">Selected</string>
 </resources>

@@ -70,6 +70,7 @@ timestamp prefix from each line and base64-decode the lines between the markers.
 - Feed cards are built on `FeedCard` (full-bleed, leaves room for the overlay header and the right-hand action rail); use `rememberFeedHaptics()` for answer feedback.
 - New user-facing strings: keep them short, specific, and actionable (see `.claude/rules/ui-compose.md`).
 - Keep `PromptBuilder` (what we ask for) and `ContentParser` (what we accept) in sync — they are one contract.
+- The ModelArk model and region list lives in `domain/model/AiModelCatalog.kt` (source: https://ai.byteplus.com/ark/region:ap-southeast-1/docs/model-list; the docs.byteplus.com copy is JS-rendered and unreadable from the cloud). Settings, the settings store (which migrates old ids through `AiModelCatalog.resolve`) and `AiModelCatalogTest` all read from it. Model ids carry a `yymmdd` version suffix; never add one without it.
 - Room schema changes require a version bump **and** a `Migration` added in `AppDatabase` + registered in `DatabaseModule`. `fallbackToDestructiveMigration()` is on, so a forgotten migration silently wipes user data.
 
 ## Known pitfalls
