@@ -20,7 +20,7 @@ paths:
 
 ## State keyed to data, not position
 - In `HorizontalPager` / `LazyColumn`, pass a stable `key` (content id) and use `remember(content.id) { … }` / `rememberSaveable` for per-item state (selected option, revealed answer).
-- Exception: the learning feed's `VerticalPager` has no keys on purpose, so that when a batch arrives while the user sits on the status page the first new card takes its place. Its cards key all per-item state by `content.id` instead, so page reuse is safe.
+- Exception: the learning feed's `HorizontalPager` has no keys on purpose, so that when a batch arrives while the user sits on the status page the first new card takes its place. Its cards key all per-item state by `content.id` instead, so page reuse is safe.
 - Do not build `Flow`s inside composables without `remember(key)`; a new flow each recomposition resubscribes.
 
 ## Discoverability

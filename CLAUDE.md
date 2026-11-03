@@ -28,7 +28,7 @@ util/     PromptBuilder (prompt text), ContentParser (AI JSON -> domain), Consta
 3. reads settings (`SettingsDataStore`), existing questions (`ContentDao`), builds prompt (`PromptBuilder`)
 4. POST `chat/completions` (Retrofit built per call from region base URL; auth header added in `NetworkModule` interceptor)
 5. `ContentParser.parseResponse` / `parseMixResponse` -> filter duplicates -> `ContentDao.insertAll`
-6. `ContentPagerViewModel` observes the DAO `Flow`, lays it out with `FeedLayout` (runs of 10 cards + a `RunSummaryCard` + a trailing status page) and `ContentPagerScreen` renders it as a full-screen `VerticalPager` feed of `MCQCard` / `QACard` (flashcard) / `FunFactCard` (Spark)
+6. `ContentPagerViewModel` observes the DAO `Flow`, lays it out with `FeedLayout` (runs of 10 cards + a `RunSummaryCard` + a trailing status page) and `ContentPagerScreen` renders it as a full-screen `HorizontalPager` feed (swipe left/right, or tap the right/left half) of `MCQCard` / `QACard` (flashcard) / `FunFactCard` (Spark)
 
 ### Navigation
 
