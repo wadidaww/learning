@@ -27,8 +27,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kresna.aitopicapp.R
@@ -46,6 +48,7 @@ import com.kresna.aitopicapp.ui.components.RunSummaryCard
 import com.kresna.aitopicapp.ui.components.UnsupportedContentCard
 import com.kresna.aitopicapp.ui.components.copyContentToClipboard
 import com.kresna.aitopicapp.ui.components.shareContent
+import com.kresna.aitopicapp.ui.components.tapToNavigate
 import com.kresna.aitopicapp.ui.theme.CardStyle
 import com.kresna.aitopicapp.util.Constants
 import com.kresna.aitopicapp.util.FeedPage
@@ -68,6 +71,7 @@ fun ContentPagerScreen(
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val pageCount by rememberUpdatedState(pages.size)
     val scope = rememberCoroutineScope()
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
     // Resume where the user left off: jump once to the first unviewed card.
     LaunchedEffect(state.startPage, state.startPageConsumed) {
@@ -112,21 +116,24 @@ fun ContentPagerScreen(
                     // No item keys on purpose: when a batch arrives while the status page is shown,
                     // the first new card takes its place instead of the pager following the status page.
                 ) { page ->
-                    when (val feedPage = pages.getOrNull(page)) {
-                        is FeedPage.Card -> ContentCard(
-                            content = feedPage.content,
-                            onAnswer = { index -> viewModel.answer(feedPage.content, index) }
-                        )
-                        is FeedPage.RunSummary -> RunSummaryCard(
-                            stats = feedPage.stats,
-                            onKeepGoing = { scope.launch { pagerState.animateScrollToPage(page + 1) } },
-                            onDone = onBackClick
-                        )
-                        FeedPage.Status, null -> GenerationStatusCard(
-                            status = state.generation,
-                            hasContent = state.content.isNotEmpty(),
-                            onGenerate = viewModel::retryGeneration
-                        )
+                    // Tap the left / right half of a page to step back / forward.
+                    Box(modifier = Modifier.fillMaxSize().tapToNavigate(pagerState, scope, isRtl)) {
+                        when (val feedPage = pages.getOrNull(page)) {
+                            is FeedPage.Card -> ContentCard(
+                                content = feedPage.content,
+                                onAnswer = { index -> viewModel.answer(feedPage.content, index) }
+                            )
+                            is FeedPage.RunSummary -> RunSummaryCard(
+                                stats = feedPage.stats,
+                                onKeepGoing = { scope.launch { pagerState.animateScrollToPage(page + 1) } },
+                                onDone = onBackClick
+                            )
+                            FeedPage.Status, null -> GenerationStatusCard(
+                                status = state.generation,
+                                hasContent = state.content.isNotEmpty(),
+                                onGenerate = viewModel::retryGeneration
+                            )
+                        }
                     }
                 }
 
