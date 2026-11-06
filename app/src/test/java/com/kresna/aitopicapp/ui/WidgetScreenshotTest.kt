@@ -11,6 +11,7 @@ import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.android.resources.NightMode
 import com.kresna.aitopicapp.R
+import com.kresna.aitopicapp.ui.widget.WidgetSizing
 import org.junit.Rule
 import org.junit.Test
 
@@ -34,6 +35,9 @@ class WidgetDarkScreenshotTest {
     fun widgetDark() = paparazzi.snapshot(widgetSheet(paparazzi))
 }
 
+/** About a 4 x 2 cell widget on a phone. */
+private const val WIDGET_HEIGHT_DP = 150f
+
 private fun widgetPaparazzi(nightMode: NightMode) = Paparazzi(
     deviceConfig = DeviceConfig.PIXEL_5.copy(nightMode = nightMode),
     theme = "android:Theme.Material.NoActionBar"
@@ -52,9 +56,13 @@ private fun widgetSheet(paparazzi: Paparazzi): View {
         val widget = paparazzi.inflate<View>(R.layout.widget_daily_card)
         widget.findViewById<ImageView>(R.id.widget_type_icon).setImageResource(icon)
         widget.findViewById<TextView>(R.id.widget_label).text = label
-        widget.findViewById<TextView>(R.id.widget_body).text = body
+        widget.findViewById<TextView>(R.id.widget_body).apply {
+            text = body
+            // As DailyCardWidgetProvider does for a widget of this height.
+            maxLines = WidgetSizing.bodyMaxLines(WIDGET_HEIGHT_DP)
+        }
         widget.findViewById<TextView>(R.id.widget_hint).text = hint
-        val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (150 * dp).toInt())
+        val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (WIDGET_HEIGHT_DP * dp).toInt())
         params.bottomMargin = (16 * dp).toInt()
         column.addView(widget, params)
     }

@@ -7,7 +7,11 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Build
+import android.os.Bundle
 import android.util.Log
+import android.util.SizeF
 import android.widget.RemoteViews
 import com.kresna.aitopicapp.MainActivity
 import com.kresna.aitopicapp.R
@@ -54,6 +58,16 @@ class DailyCardWidgetProvider : AppWidgetProvider() {
         refresh(context, appWidgetIds)
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle
+    ) {
+        // Resized: fit the card text to the new height.
+        refresh(context, intArrayOf(appWidgetId))
+    }
+
     override fun onDisabled(context: Context) {
         // Last widget removed: stop the midnight alarm.
         context.getSystemService(AlarmManager::class.java)?.cancel(refreshIntent(context))
@@ -73,7 +87,7 @@ class DailyCardWidgetProvider : AppWidgetProvider() {
 
                 val manager = AppWidgetManager.getInstance(context)
                 ids.forEach { id ->
-                    manager.updateAppWidget(id, render(context, id, result.getOrNull(), failed = result.isFailure))
+                    manager.updateAppWidget(id, sizedViews(context, manager, id, result.getOrNull(), failed = result.isFailure))
                 }
                 scheduleNextMidnight(context)
             } finally {
@@ -82,7 +96,41 @@ class DailyCardWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    private fun render(context: Context, widgetId: Int, card: DailyCard?, failed: Boolean): RemoteViews {
+    /**
+     * Views fitted to the widget's height, so long text ends with an ellipsis rather than a
+     * half-clipped line. Android 12+ reports every size the widget can show at (portrait and
+     * landscape) and picks the matching layout itself; before that, use the current orientation.
+     */
+    private fun sizedViews(
+        context: Context,
+        manager: AppWidgetManager,
+        widgetId: Int,
+        card: DailyCard?,
+        failed: Boolean
+    ): RemoteViews {
+        val options = manager.getAppWidgetOptions(widgetId)
+        val fontScale = context.resources.configuration.fontScale
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            @Suppress("DEPRECATION")
+            val sizes = options.getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
+            if (!sizes.isNullOrEmpty()) {
+                return RemoteViews(
+                    sizes.distinct().take(MAX_SIZES).associateWith { size ->
+                        render(context, widgetId, card, failed, WidgetSizing.bodyMaxLines(size.height, fontScale))
+                    }
+                )
+            }
+        }
+        val portrait = context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+        // Portrait shows the widget at its max height, landscape at its min height.
+        val heightDp = options.getInt(
+            if (portrait) AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT else AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,
+            0
+        )
+        return render(context, widgetId, card, failed, WidgetSizing.bodyMaxLines(heightDp.toFloat(), fontScale))
+    }
+
+    private fun render(context: Context, widgetId: Int, card: DailyCard?, failed: Boolean, bodyMaxLines: Int): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_daily_card)
         val (icon, label, body, hint) = when {
             failed -> Texts(
@@ -110,6 +158,7 @@ class DailyCardWidgetProvider : AppWidgetProvider() {
         views.setImageViewResource(R.id.widget_type_icon, icon)
         views.setTextViewText(R.id.widget_label, label)
         views.setTextViewText(R.id.widget_body, body)
+        views.setInt(R.id.widget_body, "setMaxLines", bodyMaxLines)
         views.setTextViewText(R.id.widget_hint, hint)
         views.setContentDescription(R.id.widget_root, context.getString(R.string.widget_content_description, label, body, hint))
         views.setOnClickPendingIntent(R.id.widget_root, openAppIntent(context, widgetId, card))
@@ -121,6 +170,9 @@ class DailyCardWidgetProvider : AppWidgetProvider() {
     companion object {
         /** Our own refresh broadcast (midnight alarm, app going to the background, adb). */
         const val ACTION_REFRESH = "com.kresna.aitopicapp.widget.REFRESH"
+
+        /** RemoteViews accepts at most 16 sized layouts. */
+        private const val MAX_SIZES = 16
 
         private val REFRESH_ACTIONS = setOf(
             ACTION_REFRESH,
