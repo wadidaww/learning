@@ -75,7 +75,36 @@ interface ContentDao {
             "FROM generated_content WHERE topicId = :topicId"
     )
     fun observeProgress(topicId: Long): Flow<ProgressRow>
+
+    /** Items the widget's daily card is picked from; content left behind by a deleted topic is skipped. */
+    @Query(
+        "SELECT c.id AS id, c.topicId AS topicId, c.isViewed AS isViewed " +
+            "FROM generated_content c INNER JOIN topics t ON t.id = c.topicId"
+    )
+    suspend fun getDailyCandidates(): List<DailyCandidateRow>
+
+    @Query(
+        "SELECT c.id AS id, c.topicId AS topicId, t.name AS topicName, c.contentType AS contentType, " +
+            "c.question AS question, c.answer AS answer " +
+            "FROM generated_content c INNER JOIN topics t ON t.id = c.topicId WHERE c.id = :contentId"
+    )
+    suspend fun getDailyCard(contentId: Long): DailyCardRow?
 }
+
+data class DailyCandidateRow(
+    val id: Long,
+    val topicId: Long,
+    val isViewed: Boolean
+)
+
+data class DailyCardRow(
+    val id: Long,
+    val topicId: Long,
+    val topicName: String,
+    val contentType: ContentType,
+    val question: String,
+    val answer: String?
+)
 
 data class ProgressRow(
     val total: Int,

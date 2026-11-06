@@ -1,6 +1,7 @@
 package com.kresna.aitopicapp.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,7 +18,12 @@ object NavArgs {
     const val TOPIC_ID = "topicId"
     const val CONTENT_TYPE = "contentType"
     const val FILTER = "filter"
+    /** Card to open the feed on (e.g. from the home-screen widget); -1 resumes where the user left off. */
+    const val START_CONTENT_ID = "startContentId"
 }
+
+/** A card to open on launch, from the home-screen widget. */
+data class StartCard(val topicId: Long, val contentType: ContentType, val contentId: Long)
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -25,14 +31,25 @@ sealed class Screen(val route: String) {
     object TopicDetail : Screen("topic/{${NavArgs.TOPIC_ID}}") {
         fun createRoute(topicId: Long) = "topic/$topicId"
     }
-    object ContentPager : Screen("content/{${NavArgs.TOPIC_ID}}/{${NavArgs.CONTENT_TYPE}}?${NavArgs.FILTER}={${NavArgs.FILTER}}") {
-        fun createRoute(topicId: Long, contentType: ContentType, filter: ContentFilter = ContentFilter.ALL) =
-            "content/$topicId/${contentType.name}?${NavArgs.FILTER}=${filter.name}"
+    object ContentPager : Screen(
+        "content/{${NavArgs.TOPIC_ID}}/{${NavArgs.CONTENT_TYPE}}" +
+            "?${NavArgs.FILTER}={${NavArgs.FILTER}}&${NavArgs.START_CONTENT_ID}={${NavArgs.START_CONTENT_ID}}"
+    ) {
+        fun createRoute(
+            topicId: Long,
+            contentType: ContentType,
+            filter: ContentFilter = ContentFilter.ALL,
+            startContentId: Long? = null
+        ) = "content/$topicId/${contentType.name}?${NavArgs.FILTER}=${filter.name}" +
+            (startContentId?.let { "&${NavArgs.START_CONTENT_ID}=$it" } ?: "")
     }
 }
 
+/**
+ * @param startCard card to open on top of Home, once; null for a normal launch.
+ */
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(navController: NavHostController, startCard: StartCard? = null) {
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route
@@ -80,6 +97,10 @@ fun NavGraph(navController: NavHostController) {
                 navArgument(NavArgs.FILTER) {
                     type = NavType.StringType
                     defaultValue = ContentFilter.ALL.name
+                },
+                navArgument(NavArgs.START_CONTENT_ID) {
+                    type = NavType.LongType
+                    defaultValue = -1L
                 }
             )
         ) { backStackEntry ->
@@ -94,6 +115,13 @@ fun NavGraph(navController: NavHostController) {
                     }
                 }
             )
+        }
+    }
+
+    // After NavHost so the graph is set before navigating; Home stays underneath for Back.
+    LaunchedEffect(startCard) {
+        startCard?.let {
+            navController.navigate(Screen.ContentPager.createRoute(it.topicId, it.contentType, startContentId = it.contentId))
         }
     }
 }

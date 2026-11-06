@@ -6,8 +6,10 @@ import com.kresna.aitopicapp.data.local.AppDatabase
 import com.kresna.aitopicapp.data.local.dao.ContentDao
 import com.kresna.aitopicapp.data.local.dao.TopicDao
 import com.kresna.aitopicapp.data.repository.ContentRepositoryImpl
+import com.kresna.aitopicapp.data.repository.DailyCardRepositoryImpl
 import com.kresna.aitopicapp.data.repository.TopicRepositoryImpl
 import com.kresna.aitopicapp.domain.repository.ContentRepository
+import com.kresna.aitopicapp.domain.repository.DailyCardRepository
 import com.kresna.aitopicapp.domain.repository.TopicRepository
 import dagger.Binds
 import dagger.Module
@@ -56,4 +58,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindContentRepository(impl: ContentRepositoryImpl): ContentRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDailyCardRepository(impl: DailyCardRepositoryImpl): DailyCardRepository
 }

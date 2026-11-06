@@ -65,6 +65,8 @@ class ContentPagerViewModel @Inject constructor(
     private val topicId: Long = savedStateHandle.get<Long>(NavArgs.TOPIC_ID) ?: 0L
     private val contentType = ContentType.fromString(savedStateHandle.get<String>(NavArgs.CONTENT_TYPE))
     private val filter = ContentFilter.fromString(savedStateHandle.get<String>(NavArgs.FILTER))
+    /** Card to open on (from the home-screen widget), or null to resume where the user left off. */
+    private val startContentId = savedStateHandle.get<Long>(NavArgs.START_CONTENT_ID)?.takeIf { it > 0 }
 
     private val _uiState = MutableStateFlow(ContentPagerUiState(contentType = contentType, filter = filter))
     val uiState: StateFlow<ContentPagerUiState> = _uiState.asStateFlow()
@@ -116,12 +118,11 @@ class ContentPagerViewModel @Inject constructor(
             .map { all -> all.filter { it.id in ids } }
     }
 
-    private fun startPageFor(list: List<GeneratedContent>): Int =
-        if (filter == ContentFilter.ALL) {
-            FeedLayout.pageOf(LearningPosition.startIndex(list), withRunSummaries = _uiState.value.hasRuns)
-        } else {
-            0
-        }
+    private fun startPageFor(list: List<GeneratedContent>): Int {
+        if (filter != ContentFilter.ALL) return 0
+        val requested = startContentId?.let { id -> list.indexOfFirst { it.id == id } }?.takeIf { it >= 0 }
+        return FeedLayout.pageOf(requested ?: LearningPosition.startIndex(list), withRunSummaries = _uiState.value.hasRuns)
+    }
 
     fun onStartPageConsumed() {
         _uiState.update { it.copy(startPageConsumed = true) }
