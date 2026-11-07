@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,7 +56,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
- * Full-screen, swipe-up learning feed (like short-form video apps): one card per screen, a
+ * Full-screen learning feed, swiped left and right like stories: one card per screen, a
  * translucent header with run progress and combo, and an action rail on the right.
  */
 @Composable
@@ -110,7 +110,7 @@ fun ContentPagerScreen(
             )
 
             else -> {
-                VerticalPager(
+                HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize()
                     // No item keys on purpose: when a batch arrives while the status page is shown,
