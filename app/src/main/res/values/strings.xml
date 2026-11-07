@@ -89,4 +89,22 @@
     <string name="settings_model_not_in_region">This model isn\'t served in the selected region.</string>
     <string name="settings_switch_to">Use %1$s</string>
     <string name="settings_selected">Selected</string>
+
+    <!-- Home-screen widget -->
+    <string name="widget_name">Daily card</string>
+    <string name="widget_description">One card a day from your topics. Tap it to keep learning.</string>
+    <string name="widget_today">Today</string>
+    <string name="widget_label_default">Daily card</string>
+    <string name="widget_label_format">%1$s · %2$s</string>
+    <string name="widget_loading">Picking today\'s card…</string>
+    <string name="widget_hint_quiz">Tap to answer</string>
+    <string name="widget_hint_flashcard">Tap to reveal the answer</string>
+    <string name="widget_hint_spark">Tap to keep learning</string>
+    <string name="widget_empty_body">Create a topic and get your first cards. A new one shows up here every day.</string>
+    <string name="widget_empty_hint">Open the app</string>
+    <string name="widget_error_body">Couldn\'t load today\'s card.</string>
+    <string name="widget_error_hint">Tap to open the app</string>
+    <string name="widget_content_description">%1$s. %2$s. %3$s</string>
+    <string name="widget_preview_label">Spark · Ancient Rome</string>
+    <string name="widget_preview_body">Roman harbour concrete gets stronger in seawater: the water reacts with volcanic ash in it and grows new minerals in the cracks.</string>
 </resources>

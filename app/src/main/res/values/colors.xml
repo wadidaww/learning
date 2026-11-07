@@ -3,4 +3,16 @@
     <color name="app_background">#FFF7F5F0</color>
     <color name="ic_launcher_bg_start">#FF2A2350</color>
     <color name="ic_launcher_bg_end">#FF1E4A4C</color>
+
+    <!-- Home-screen widget. RemoteViews can't read the Compose theme, so these mirror
+         ui/theme/Color.kt (Day1, DayText, DayTextMuted and DayPalette); values-night has the
+         Night versions. Keep the two in sync. -->
+    <color name="widget_surface">#FFFFFDF9</color>
+    <color name="widget_outline">#FFE4E0D7</color>
+    <color name="widget_text">#FF2B2A33</color>
+    <color name="widget_text_muted">#FF5F5D6B</color>
+    <color name="widget_accent">#FF6D55C9</color>
+    <color name="widget_spark">#FF6D55C9</color>
+    <color name="widget_quiz">#FF3567C2</color>
+    <color name="widget_flashcard">#FF21806F</color>
 </resources>

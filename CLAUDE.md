@@ -17,7 +17,8 @@ data/     Room (entities, DAOs, converters, AppDatabase), DataStore settings,
           Retrofit API + DTOs, repository implementations
 di/       Hilt modules (DatabaseModule, NetworkModule, DispatcherModule)
 ui/       screens/{home,topic,content,settings} (Screen + ViewModel each),
-          components/ (cards, dialogs), navigation/NavGraph.kt, theme/
+          components/ (cards, dialogs), navigation/NavGraph.kt, theme/,
+          widget/ (home-screen "Daily card" widget, RemoteViews)
 util/     PromptBuilder (prompt text), ContentParser (AI JSON -> domain), Constants
 ```
 
@@ -29,6 +30,17 @@ util/     PromptBuilder (prompt text), ContentParser (AI JSON -> domain), Consta
 4. POST `chat/completions` (Retrofit built per call from region base URL; auth header added in `NetworkModule` interceptor)
 5. `ContentParser.parseResponse` / `parseMixResponse` -> filter duplicates -> `ContentDao.insertAll`
 6. `ContentPagerViewModel` observes the DAO `Flow`, lays it out with `FeedLayout` (runs of 10 cards + a `RunSummaryCard` + a trailing status page) and `ContentPagerScreen` renders it as a full-screen `HorizontalPager` feed (swipe left/right, or tap the right/left half) of `MCQCard` / `QACard` (flashcard) / `FunFactCard` (Spark)
+
+### Home-screen widget
+
+`ui/widget/DailyCardWidgetProvider` (Hilt `AppWidgetProvider`, classic RemoteViews, layout
+`res/layout/widget_daily_card.xml`) shows one card a day from all topics. `GetDailyCardUseCase`
+-> `DailyCardRepository` (candidates via `ContentDao.getDailyCandidates`, today's pick kept in
+`shared_prefs/daily_card.xml`) -> `DailyCardPicker.choose` (pure, unit-tested: keeps the day's pick,
+rotates topics, prefers unviewed cards). Refreshes: when placed, ~1 min after midnight (inexact
+alarm), every 6 h fallback, time/zone change, and `MainActivity.onStop`. A tap launches
+`MainActivity` with `DailyCardLink` extras -> `NavGraph(startCard)` -> pager route with
+`startContentId`. Widget colours are XML resources mirroring `Color.kt` (values / values-night).
 
 ### Navigation
 
@@ -84,7 +96,7 @@ The parser, dedup, pager ordering and topic deletion bugs listed here before PR 
 ## Debugging
 
 See the `debug-android` skill (`.claude/skills/debug-android/SKILL.md`) for logcat filters, adb DB/DataStore inspection and how to capture the raw AI response.
-Existing log tags: `ContentParser`. There is no HTTP logging yet (`okhttp-logging` is a dependency but not wired up).
+Existing log tags: `ContentParser`, `DailyCardWidget` (which card the widget shows, load failures). There is no HTTP logging yet (`okhttp-logging` is a dependency but not wired up).
 
 ## Claude tooling in this repo
 

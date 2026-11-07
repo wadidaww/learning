@@ -22,7 +22,7 @@ adb logcat --pid=$(adb shell pidof com.kresna.aitopicapp) -v time      # only th
 adb logcat -v time ContentParser:V OkHttp:V AndroidRuntime:E '*:S'     # parser + HTTP + crashes
 adb logcat -b crash -d                                                # last crash buffer
 ```
-Current log tags: `ContentParser` (parse failures, skipped items). `OkHttp` appears only once an `HttpLoggingInterceptor` is wired in debug builds (not yet; see "Gaps").
+Current log tags: `ContentParser` (parse failures, skipped items), `DailyCardWidget` (home-screen widget: which card it shows, load failures). `OkHttp` appears only once an `HttpLoggingInterceptor` is wired in debug builds (not yet; see "Gaps").
 
 Save evidence to a file so it can be attached to a bug: `adb logcat -d -v time > /tmp/aitopic-$(date +%s).log`.
 
@@ -54,14 +54,24 @@ When content is missing or wrong, the question is always "what did the model act
 - Then reproduce with: `adb logcat -v time ContentRepo:D ContentParser:V '*:S'`.
 - Feed the captured text into a JVM unit test for `ContentParser` so the bug stays fixed.
 
-## 6. Reset state
+## 6. Home-screen widget ("Daily card")
+```bash
+adb logcat -v time DailyCardWidget:V '*:S'                                   # what it picked
+adb shell am broadcast -n com.kresna.aitopicapp/.ui.widget.DailyCardWidgetProvider \
+    -a com.kresna.aitopicapp.widget.REFRESH                                   # refresh now
+adb exec-out run-as com.kresna.aitopicapp cat shared_prefs/daily_card.xml    # today's pick (epoch_day, content_id)
+adb shell run-as com.kresna.aitopicapp rm shared_prefs/daily_card.xml        # then REFRESH: pick a new card
+adb shell dumpsys alarm | grep -A3 aitopicapp                                 # next midnight refresh
+```
+
+## 7. Reset state
 ```bash
 adb shell pm clear com.kresna.aitopicapp          # wipe DB + settings
 adb shell am force-stop com.kresna.aitopicapp
 adb shell am start -n com.kresna.aitopicapp/.MainActivity
 ```
 
-## 7. UI debugging
+## 8. UI debugging
 - Screenshot: `adb exec-out screencap -p > screen.png` (then Read the PNG).
 - Layout bounds: `adb shell setprop debug.layout true && adb shell service call activity 1599295570`.
 - Dark mode: `adb shell cmd uimode night yes|no`. Font scale: `adb shell settings put system font_scale 2.0`.

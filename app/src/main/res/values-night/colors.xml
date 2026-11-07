@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="app_background">#FF121318</color>
+
+    <!-- Home-screen widget, night: Night1, NightText, NightTextMuted and NightPalette. -->
+    <color name="widget_surface">#FF1A1B22</color>
+    <color name="widget_outline">#FF2E2F3A</color>
+    <color name="widget_text">#FFE6E4EF</color>
+    <color name="widget_text_muted">#FFA9A7B8</color>
+    <color name="widget_accent">#FFB4A2F8</color>
+    <color name="widget_spark">#FFB4A2F8</color>
+    <color name="widget_quiz">#FF8DB4F7</color>
+    <color name="widget_flashcard">#FF7FD1C0</color>
 </resources>
